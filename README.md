@@ -83,3 +83,10 @@ All commands assume that they are run from the repository root. Output files are
 written under `sim/output/`, which is intentionally ignored by Git. Full
 benchmarks can take hours on a workstation, while smoke modes are meant only to
 check interfaces.
+
+## Review And Release Note
+
+This is the public companion implementation for the manuscript. It is suitable
+for a non-anonymous submission or post-acceptance release. If a review venue
+requires anonymous supplementary material, mirror this repository into an
+anonymous archive and remove account-level metadata before submission.
