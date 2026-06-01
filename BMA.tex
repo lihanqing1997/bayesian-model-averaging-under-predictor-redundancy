@@ -127,7 +127,7 @@ Bayesian model averaging can spread posterior mass over many nearly interchangea
 
 Bayesian model averaging (BMA) averages over supports instead of conditioning on a single selected model \citep{hoeting1999,forte2018}. This protects model uncertainty, but predictor redundancy creates a summarization problem that subset averaging alone does not solve. The problem occurs both in classical regimes with moderate \(p\) and in high-dimensional sparse regimes where \(p\) may be comparable to or larger than \(n\). A posterior can concentrate on simple models while spreading its mass over many near-substitute supports. The support posterior is discrete, so one exact support \(\gamma\) with positive posterior mass is an atom of the posterior measure. The scientifically stable object may then be a region of support space, rather than any particular atom.
 
-This paper treats that situation as a posterior-compression problem for a fixed unrestricted support posterior. We seek low-complexity hard or soft support-space regions that preserve enough of the unrestricted posterior to be reported with quantitative distortion diagnostics. The practical regimes are easiest to see as recurring redundancy patterns rather than as one application. Figure~\ref{fig:practicalregimes} sketches three common cases.
+This paper treats that situation as a posterior-compression problem for a fixed unrestricted support posterior. We seek hard or soft support-space regions with low expected descriptor cost that preserve enough of the unrestricted posterior to be reported with quantitative distortion diagnostics. The practical regimes are easiest to see as recurring redundancy patterns rather than as one application. Figure~\ref{fig:practicalregimes} sketches three common cases.
 \begin{itemize}[leftmargin=1.8em,itemsep=1pt,topsep=3pt]
 \item \textbf{Spectroscopy.} Adjacent wavelength channels can measure the same broad absorption feature, so many posterior-plausible supports differ only by which nearby channel is chosen.
 \item \textbf{Molecular modules.} Co-expressed probes or genes can act as substitutes for the same biological module. The module-level posterior message may be stable even when the exact probe is not.
@@ -156,7 +156,7 @@ We use a few paper-specific terms. A support atom is one exact model support \(\
 
 The workflow starts from a trustworthy reference posterior on the unrestricted support space. The reference may come from exact enumeration, MCMC, SMC, variational approximation, or another model-specific Bayesian engine. At the compression stage, the density-ratio calculation does not require a Gaussian likelihood or a Gaussian coefficient prior. The reproducible experiments use a regularized Gaussian linear BMA instance because it gives exact small-\(p\) checks and stable large-\(p\) diagnostics. Candidate regions are learned on one posterior split. Their masses are estimated on a second split. Mixture weights are optimized on validation draws, and final distortion is reported on held-out draws. These splits matter because some dictionaries are learned from the posterior sample. The compression result is useful only when the reference posterior itself is trustworthy. Failed reference diagnostics make the compression exploratory rather than validated.
 
-This scope is part of the method. The paper does not introduce a new prior, a new reference-posterior sampler, or a universal variable-selection rule. It gives a way to compress and check a fixed support posterior after that posterior has been computed. A reported summary is successful only when posterior distortion is small, expected descriptor cost is small, the active descriptor list is shown, and the fallback weight \(q_0\) is not carrying most of the approximation. We therefore report \(q_0\)-screened frontiers in the main large-\(p\) benchmark rather than relying on a single fitted point.
+This scope is part of the method. The paper does not introduce a new prior, a new reference-posterior sampler, or a universal variable-selection rule. It gives a way to compress and check a fixed support posterior after that posterior has been computed. A reported summary is successful only when posterior distortion is small, expected descriptor cost is small, the active descriptor list is shown, and the fallback weight \(q_0\) is not carrying most of the approximation. We therefore report \(q_0\) in the main benchmark tables and give \(q_0\)-screened frontiers in the appendix rather than relying on a single fitted point.
 
 The paper has one organizing contribution, density-ratio posterior compression for a fixed support posterior. The formal work supports this idea in three pieces.
 \begin{enumerate}[leftmargin=1.8em,itemsep=0.35em,topsep=0.35em,parsep=0pt,partopsep=0pt]
@@ -548,7 +548,7 @@ The empirical tables therefore report expected code together with active kernels
 
 \begin{theorem}[Held-out check]
 \label{thm:empiricalcertification}
-Let \(W=\{w_0,\dots,w_M\}\) be constructed from a construction split independent of the mass-estimation and validation samples. Conditional on this split, suppose \(0\le w_m\le1\) and \(\alpha_m=\E_{\pi_0}w_m(\Gamma)>0\). Let \(\Gamma_1,\dots,\Gamma_N\) be an independent validation sample from \(\pi_0(\cdot\mid\D)\). For a mass floor \(a\in(0,1]\), define \(\alpha_m^a=\max\{\alpha_m,a\}\) and \(h_q^a(\gamma)=\sum_{m=0}^Mq_mw_m(\gamma)/\alpha_m^a\). Compute \(\widehat\alpha_m^a=\max\{\widehat\alpha_m,a\}\) from an independent mass-estimation sample, and let \(\widehat h_q\) replace \(\alpha_m^a\) by \(\widehat\alpha_m^a\). Let \(I=[b,a^{-1}]\) with \(0\le b\le a^{-1}\), and suppose the feasible set and the mass estimator imply \(h_q^a(\gamma)\in I\) and \(\widehat h_q(\gamma)\in I\) for all reported \(q\) and all validation supports on the event being conditioned on. For a loss \(\ell\) on \(I\), define the truncated population objective
+Let \(W=\{w_0,\dots,w_M\}\) be constructed from a construction split independent of the mass-estimation and validation samples. Conditional on this split, suppose \(0\le w_m\le1\) and \(\alpha_m=\E_{\pi_0}w_m(\Gamma)>0\). Let \(\Gamma_1,\dots,\Gamma_N\) be an independent validation sample from \(\pi_0(\cdot\mid\D)\). For a mass floor \(a\in(0,1]\), define \(\alpha_m^a=\max\{\alpha_m,a\}\) and \(h_q^a(\gamma)=\sum_{m=0}^Mq_mw_m(\gamma)/\alpha_m^a\). Compute \(\widehat\alpha_m^a=\max\{\widehat\alpha_m,a\}\) from an independent mass-estimation sample, and let \(\widehat h_q\) replace \(\alpha_m^a\) by \(\widehat\alpha_m^a\). Let \(I=[b,a^{-1}]\) with \(0\le b\le a^{-1}\), taking \(b>0\) for KL-type losses. Suppose the feasible set and the mass estimator imply \(h_q^a(\gamma)\in I\) and \(\widehat h_q(\gamma)\in I\) for all \(q\in\mathcal Q\) and all validation supports on the event being conditioned on. For a loss \(\ell\) on \(I\), define the truncated population objective
 \[
 \mathcal L_{\beta,\tau}^a(q) = \E_{\pi_0}\ell\{h_q^a(\Gamma)\} + \beta\sum_{m=0}^M q_m c_m + \tau\sum_{m=0}^M q_m\log q_m
 \]
@@ -842,9 +842,9 @@ The semi-synthetic spectroscopy experiment uses the real Tecator predictor matri
 \subsection{Empirical takeaway}
 \label{subsec:empiricaltakeaway}
 
-The main experiments support three claims. The density-ratio calculation gives a common diagnostic scale for atom lists, hard regions, soft kernels, posterior clusters, and changed-prior comparisons. Region dictionaries are useful under predictor redundancy because they can summarize many nearly equivalent supports without listing each atom. The best dictionary depends on the reporting goal. Posterior-cluster kernels are strong when raw TV or FKL is the target, while pooled-pruned structured kernels are better when the goal is a low expected-code support-region summary with a small fallback weight.
+The main experiments support three claims. The density-ratio calculation gives a common diagnostic scale for atom lists, hard regions, soft kernels, posterior clusters, and changed-prior comparisons. Region dictionaries are useful under predictor redundancy because they can summarize many nearly equivalent supports without listing each atom. The best dictionary depends on the reporting goal. Posterior-cluster kernels are strong when raw TV or FKL is the target, while pooled-pruned structured kernels give favorable expected-code support-region summaries when the fallback weight is small.
 
-The companion GitHub repository contains the active implementation, figure and table generators, fixed seeds, tuning grids, benchmark scripts, and PDF compilation instructions.
+The companion GitHub repository contains the active R implementation, fixed seeds, tuning grids, preprocessing scripts, scripts for all main figures and tables, generated CSV and TeX output files, and documented commands for the exact benchmark, large \(p=100\) benchmark, logistic support-posterior check, \(q_0\)-screened frontier, reduced real-response benchmark, and PDF compilation.
 
 \section{Discussion}\label{sec:discussion}
 
@@ -858,7 +858,7 @@ The theoretical results have two roles. The validation results say what is true 
 
 The empirical evidence follows the same logic. The main text gives a full exact benchmark, a \(p=100\) end-to-end benchmark with \(36\) passing reference fits, and a semi-synthetic real-\(X\) spectroscopy check. The appendix keeps algebra checks, atom-scaling diagnostics, prediction-only rows, \(q_0\)-screened frontiers, saved-draw diagnostics, ablations, and reduced real-response spectroscopy checks with exact reference posteriors. The experiments answer two questions. First, density-ratio compression gives favorable posterior-compression tradeoffs against outside Bayesian baselines such as dilution-prior BMA and DPP-prior BMA in most reported regimes, while keeping the unrestricted posterior target fixed. Second, the best dictionary family depends on the reporting goal.
 
-Posterior-cluster kernels are strong raw-distortion summaries and often have lower TV and FKL, but they use learned medoids and can leave a larger fallback weight. Pooled-pruned structured dictionaries are low expected-code, interpretable support-region summaries against Top-\(M\), credible-set, DPP-prior, and fixed-region comparisons. This is an expected-code claim, not a claim that the total active descriptor list is always smallest. The accompanying active-list and stored-atom columns expose code sensitivity. Dilution-prior BMA is competitive in some exact regimes, but it changes the prior target rather than compressing the fixed unrestricted posterior. The reduced real-response checks show practical use under exact references, while larger full-resolution real-response applications would be needed for broader applied claims. Broader computational claims would also require more large-\(p\) cells and independent stability checks, possibly through parallel tempering, SMC, annealed importance sampling, or another externally validated approximation.
+Posterior-cluster kernels are strong raw-distortion summaries and often have lower TV and FKL, but they use learned medoids and can leave a larger fallback weight. Pooled-pruned structured dictionaries give favorable expected-code, interpretable support-region summaries against Top-\(M\), credible-set, DPP-prior, and fixed-region comparisons. This is an expected-code claim, not a claim that the total active descriptor list is always smallest. The expected descriptor cost is not the same as the total cost of listing every active descriptor. The accompanying active-list and stored-atom columns expose code sensitivity. Dilution-prior BMA is competitive in some exact regimes, but it changes the prior target rather than compressing the fixed unrestricted posterior. The reduced real-response checks show practical use under exact references, while larger full-resolution real-response applications would be needed for broader applied claims. Broader computational claims would also require more large-\(p\) cells and independent stability checks, possibly through parallel tempering, SMC, annealed importance sampling, or another externally validated approximation.
 
 This is a real limitation. The method is a compression and reporting layer for an unrestricted Bayesian analysis. It is useful after a reliable reference posterior, or a reliable approximation to it, has been obtained. It is not automatically faster than unrestricted BMA, and it should not be marketed as a scalable replacement for reference-posterior computation. A scalable replacement would require a separately validated support-MCMC, SMC, variational, or annealed reference-posterior engine with its own mixing, accuracy, and runtime evidence.
 
@@ -1067,7 +1067,7 @@ Theorem~\ref{thm:topmseparation} explains why keeping the largest support atoms 
 \label{fig:maintopmsep}
 \end{figure}
 
-Table~\ref{tab:logisticcheck} repeats the compression calculation for a binary logistic support posterior. It is a small algebra check, not a full GLM BMA benchmark.
+Table~\ref{tab:logisticcheck} repeats the compression calculation for a binary logistic support posterior. It is a logistic support-posterior check for the model-agnostic compression step, not a full GLM BMA benchmark.
 
 \begin{table}[!htbp]
 \centering
@@ -1085,7 +1085,7 @@ Tables~\ref{tab:exactpredictivebaselines} and~\ref{tab:largepredictivebaselines}
 \centering
 \scriptsize
 \input{sim/output/tables/table_support_kernel_predictive_baselines.tex}
-\caption{Prediction-only baselines in the exact benchmark.}
+\caption{Prediction-only baselines in the exact benchmark. These methods do not define support posteriors, so TV and FKL are not applicable.}
 \label{tab:exactpredictivebaselines}
 \end{table}
 
@@ -1093,7 +1093,7 @@ Tables~\ref{tab:exactpredictivebaselines} and~\ref{tab:largepredictivebaselines}
 \centering
 \small
 \input{sim/output/tables/table_large_end_to_end_predictive_baselines.tex}
-\caption{Prediction-only baselines in the large \(p=100\) benchmark.}
+\caption{Prediction-only baselines in the large \(p=100\) benchmark. These methods do not define support posteriors, so TV and FKL are not applicable.}
 \label{tab:largepredictivebaselines}
 \end{table}
 
@@ -1103,7 +1103,7 @@ Table~\ref{tab:q0screenedfrontier} screens the large tuning grid by \(q_0\). It 
 \centering
 \small
 \input{sim/output/tables/table_q0_screened_frontier.tex}
-\caption{\(q_0\)-screened large \(p=100\) frontier.}
+\caption{\(q_0\)-screened large \(p=100\) frontier. This is a screen over the fitted tuning grid, not a separate constrained optimization run.}
 \label{tab:q0screenedfrontier}
 \end{table}
 
