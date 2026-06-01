@@ -919,9 +919,12 @@ Table~\ref{tab:mainadaptiveconv} reports one representative sequential trace. Th
 \end{table}
 
 \subsection{Applied checks}
+\label{subsec:appliedchecks}
+
+\subsubsection{Saved-draw check}
 \label{subsec:largersaveddraw}
 
-\smallskip\noindent\textbf{Saved-draw check.} Table~\ref{tab:mainadaptivep100} keeps the older saved-draw \(p=100\) check as a secondary diagnostic. Unlike the end-to-end run in Section~\ref{subsec:largeendtoend}, this table evaluates compression on stored unrestricted BMA posterior draws rather than rerunning the reference sampler and predictive splits. It is therefore useful for checking structured support kernels in a larger support space, but it is not the main large-\(p\) evidence. The pooled-pruned dictionaries reduce TV and forward KL relative to fixed hard-region lists across the displayed scenarios, while nonzero \(q_0\) values indicate partial rather than complete compression.
+Table~\ref{tab:mainadaptivep100} keeps the older saved-draw \(p=100\) check as a secondary diagnostic. Unlike the end-to-end run in Section~\ref{subsec:largeendtoend}, this table evaluates compression on stored unrestricted BMA posterior draws rather than rerunning the reference sampler and predictive splits. It is therefore useful for checking structured support kernels in a larger support space, but it is not the main large-\(p\) evidence. The pooled-pruned dictionaries reduce TV and forward KL relative to fixed hard-region lists across the displayed scenarios, while nonzero \(q_0\) values indicate partial rather than complete compression.
 
 \begin{table}[!htbp]
 \centering
@@ -931,7 +934,7 @@ Table~\ref{tab:mainadaptiveconv} reports one representative sequential trace. Th
 \label{tab:mainadaptivep100}
 \end{table}
 
-\smallskip\noindent\textbf{Semi-synthetic Tecator.}
+\subsubsection{Semi-synthetic Tecator}
 
 The semi-synthetic spectroscopy experiment uses the real Tecator predictor matrix with a known simulated banded signal. This keeps the difficult part of the design, since adjacent wavelength channels are highly correlated. It also gives a known active region for checking interpretability. Table~\ref{tab:mainsemisynth} and Figure~\ref{fig:mainsemisynth} show that structured pooled-pruned support kernels improve TV and forward KL over fixed hard-region lists and top-\(M\) atoms at low expected descriptor cost, with negligible predictive degradation. The learned high-weight kernels also overlap the simulated active band. This is the strongest controlled practical evidence in the paper. The response is simulated and the reduced posterior is easier to validate, so the result should be read as controlled validation rather than as a production benchmark.
 
@@ -952,7 +955,7 @@ The semi-synthetic spectroscopy experiment uses the real Tecator predictor matri
 \label{fig:mainsemisynth}
 \end{figure}
 
-\smallskip\noindent\textbf{Reduced exact real-response spectroscopy.}
+\subsubsection{Reduced exact real-response spectroscopy}
 \label{subsec:realresponsereduced}
 
 The final experiment uses real spectroscopy predictors and real responses. We use Tecator meat spectroscopy with fat response and Gasoline near-infrared spectra with octane response \citep{thodberg1993,liland2026pls}. Both data sets have ordered, highly redundant spectral channels, so they match the support-region story of the paper. To avoid centering the evidence on a weak full-resolution MCMC reference posterior, we construct a reduced ordered-region design by averaging contiguous spectral blocks using only \(X\). We then enumerate the exact BMA posterior on those regions. This is not a claim about full-resolution spectroscopy. It is a real-response, real-design test of density-ratio posterior compression under a reference posterior that is exact by construction.
@@ -979,10 +982,11 @@ Table~\ref{tab:keypairedcomparisons} summarizes paired comparisons for the main 
 \label{tab:keypairedcomparisons}
 \end{table}
 
-\smallskip\noindent\textbf{Reproducibility.} The companion GitHub repository contains the active R implementation, figure and table generators, fixed seeds, tuning grids, and benchmark scripts. Its README gives one-command paths for the exact benchmark, the large \(p=100\) end-to-end benchmark, the logistic check, the \(q_0\)-screened frontier, the reduced real-response spectroscopy benchmark, and PDF compilation. The large benchmark also stores reference-posterior diagnostics before compression is interpreted. The generated CSV files used by the manuscript tables and figures are regenerated from these scripts.
+\subsubsection{Reproducibility}
 
-\section{Discussion}
-\label{sec:discussion}
+The companion GitHub repository contains the active R implementation, figure and table generators, fixed seeds, tuning grids, and benchmark scripts. Its README gives one-command paths for the exact benchmark, the large \(p=100\) end-to-end benchmark, the logistic check, the \(q_0\)-screened frontier, the reduced real-response spectroscopy benchmark, and PDF compilation. The large benchmark also stores reference-posterior diagnostics before compression is interpreted. The generated CSV files used by the manuscript tables and figures are regenerated from these scripts.
+
+\section{Discussion}\label{sec:discussion}
 
 The paper contributes density-ratio posterior compression for a fixed unrestricted support posterior. The object being compressed is the posterior distribution over \(\Gamma_p\), not a particular Gaussian slab or linear likelihood. The Gaussian linear model is the worked benchmark because it lets us enumerate, sample, and diagnose the reference posterior. The exact density-ratio identities make TV, forward KL, reverse KL, predictive contraction, and \(q_0\) computable diagnostics rather than informal summaries. A dictionary can come from response-independent hard regions, structured adaptive kernels, posterior clusters, residual covers, pooled-pruned hybrids, or top posterior atoms. The same density-ratio calculation checks each approximation on held-out posterior draws.
 
