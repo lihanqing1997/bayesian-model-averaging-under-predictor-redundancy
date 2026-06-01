@@ -1,0 +1,10 @@
+sim/output/
+*.RData
+*.rds
+*.csv~
+*.log
+*.aux
+*.out
+*.synctex.gz
+.Rhistory
+.Rproj.user/
