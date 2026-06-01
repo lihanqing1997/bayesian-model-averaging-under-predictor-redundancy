@@ -1,0 +1,19 @@
+\setlength{\tabcolsep}{2.6pt}
+\renewcommand{\tabularxcolumn}[1]{m{#1}}
+\renewcommand{\arraystretch}{1.0}
+\begin{tabularx}{0.985\textwidth}{@{}>{\raggedright\arraybackslash}m{0.19\textwidth}>{\raggedright\arraybackslash}m{0.245\textwidth}>{\raggedright\arraybackslash}m{0.22\textwidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Family & Stored descriptor & Primary code & Sensitivity check \\
+\midrule
+\end{tabularx}
+\vspace{-0.25em}
+\renewcommand{\arraystretch}{1.32}
+\begin{tabularx}{0.985\textwidth}{@{}>{\raggedright\arraybackslash}m{0.19\textwidth}>{\raggedright\arraybackslash}m{0.245\textwidth}>{\raggedright\arraybackslash}m{0.22\textwidth}>{\raggedright\arraybackslash}X@{}}
+\rule[-1.8ex]{0pt}{7.2ex}Top-M atoms and credible sets & Sparse index sets for selected supports & Weighted sparse-support descriptor & Stored atom count and credible-set size \\
+\rule[-1.8ex]{0pt}{7.2ex}Fixed hard or group-representative regions & Active groups, capacities, and region type & Group-pattern and capacity descriptor & Number of listed hard regions \\
+\rule[-1.8ex]{0pt}{7.2ex}Structured interval and graph kernels & Intervals or graph communities, capacity, and bandwidth & Region descriptor with capacity and bandwidth & Active kernel count and total retained list size \\
+\rule[-1.8ex]{0pt}{7.2ex}Posterior-cluster kernels & Cluster medoids, bandwidth, and cluster count & Medoid descriptor with bandwidth and cluster overhead & Cluster count, medoid size, and fallback weight \\
+\rule[-1.8ex]{0pt}{7.2ex}Pooled-pruned hybrids & Retained kernel descriptors after q-mass pruning & Weighted descriptor cost of the refitted list & Active kernel count, effective kernels, and retained q-mass threshold \\
+\rule[-1.8ex]{0pt}{7.2ex}Prior-changing BMA baselines & Prior family, hyperparameters, and posterior approximation & Not a compression code for the unrestricted posterior & Target-shift TV/FKL and predictive diagnostics \\
+\bottomrule
+\end{tabularx}
