@@ -759,109 +759,45 @@ The large end-to-end rerun below clarifies the operating points. Posterior-clust
 \section{Experiments}
 \label{sec:leanmainexperiments}
 
-The empirical question is not whether a compressed summary beats unrestricted BMA. The unrestricted BMA posterior is the reference target. The experiments also do not ask for one dictionary to win every metric. They ask two more specific questions.
-\begin{enumerate}[leftmargin=1.8em,itemsep=1pt,topsep=3pt]
-\item Does density-ratio compression give useful checked posterior-compression tradeoffs compared with methods outside the framework, including dilution-prior BMA, DPP-prior BMA, and prediction-only sparse baselines?
-\item Among dictionary families inside the framework, which one is best for raw distortion, expected descriptor cost, active-list size, fallback weight, and interpretability?
-\end{enumerate}
-Most numerical experiments use the Gaussian linear BMA reference posterior from Section~\ref{sec:background}. This choice makes the density-ratio diagnostics exactly checkable at small scale and diagnosable at \(p=100\). We also include a small logistic support-posterior check to show that the compression algebra is not tied to Gaussian conjugacy once a support posterior has been computed. The experiments are organized into seven blocks. They give exact identity and atom checks, a full exact dictionary benchmark, a non-Gaussian support-posterior check, a large \(p=100\) end-to-end benchmark, dictionary diagnostics, applied checks, and reduced real-response spectroscopy with exact reference posteriors.
+The experiments answer four questions that match the paper's main claims. First, can density-ratio summaries be checked exactly in redundant support spaces? Second, do region summaries improve on atom lists such as top-\(M\) truncation? Third, how do density-ratio dictionaries compare with nearby Bayesian baselines that change or summarize the support posterior? Fourth, do the conclusions survive a larger \(p=100\) run where the reference posterior is sampled and diagnosed?
 
-We use three evidence labels. An \emph{exact simulation} is a synthetic data experiment with \(p\) small enough to enumerate all \(2^p\) supports. It tests posterior-compression behavior without MCMC error. An \emph{end-to-end simulation} is synthetic but non-enumerable. It includes reference-posterior sampling, reference diagnostics, compression, held-out checking, and prediction. A \emph{reduced exact real-response study} uses real predictors and real responses, then applies an \(X\)-only dimension reduction that leaves an exactly enumerable BMA reference posterior. This last mode is not full-resolution real data analysis, but it is real-response evidence under an exact reference.
+The unrestricted BMA posterior is always the target being summarized. The tables therefore report TV, forward KL, reverse KL, fallback weight \(q_0\), expected descriptor cost, and active or effective list size when those quantities are defined. Smaller TV and FKL mean the summary is closer to unrestricted BMA on support space. A large \(q_0\) means that the summary still leans on the unrestricted fallback component. Lasso, elastic net, and group lasso are prediction baselines only, so their TV and FKL entries are not defined. Extra algebra checks, prediction-only rows, \(q_0\)-screened frontiers, saved-draw checks, and real-response reductions are collected in Appendix~\ref{app:empiricaldiagnostics}.
 
-The tables use the same reading convention throughout. Smaller TV and FKL mean that the summary is closer to unrestricted BMA on support space. The fallback weight \(q_0\) is the weight left on the unrestricted posterior component. Large \(q_0\) means the learned region list still needs the fallback. Storage is the expected descriptor cost from Table~\ref{tab:storagecodes}. Active kernels, effective kernels, and stored atoms are list-level checks reported separately from expected cost. RMSE gap is a predictive check relative to reference BMA. Low predictive error alone is not enough for posterior compression, so lasso, elastic-net, and group-lasso rows are interpreted only as prediction baselines.
-
-\subsection{Benchmark setup}
+\subsection{Protocol and comparisons}
 \label{subsec:benchmarktarget}
 
-The benchmark separates dictionary families from external methods. Pooled-pruned and posterior-cluster kernels are dictionary constructions inside the density-ratio framework. Top-\(M\) atoms, credible support sets, and fixed hard regions are limiting or response-independent support-kernel cases. Dilution-prior BMA and DPP-prior BMA are outside the framework because they change the posterior target by changing the prior weights. Lasso, elastic net, and group lasso are predictive selection baselines rather than posterior compression baselines.
-\begin{enumerate}[leftmargin=1.8em,itemsep=1pt,topsep=3pt]
-\item \textbf{Top-\(M\) posterior support truncation and ordinary BMA model search.} The baseline keeps the largest posterior support atoms from the unrestricted BMA reference posterior or from a stochastic search approximation \citep{hoeting1999,clyde2011}. These atoms are individual support points \(\gamma\), not regions. The baseline should be matched by stored atoms, posterior mass, expected descriptor cost, and target TV or FKL whenever possible.
-\item \textbf{Posterior-cluster kernels.} This dictionary source clusters posterior support samples under Hamming or group-Hamming distance, then converts cluster centers into soft support kernels. It is motivated by collinearity-aware and block-based posterior summaries \citep{ghosh2015collinearity,papaspiliopoulos2017}, but the density-ratio calculation is what lets us evaluate it as posterior compression rather than as only an informal cluster summary. Its descriptor code includes medoid storage, bandwidth, and cluster-count overhead, so a cluster row should be read together with its fallback weight and list size.
-\item \textbf{Dilution and powered-correlation priors.} These baselines change the prior to compensate for redundancy before fitting BMA \citep{george2010,krishna2009}. They should be compared by posterior distortion when the reference target is shared, and by prediction, region stability, support-size behavior, and runtime when the prior changes the target.
-\item \textbf{Credible support sets and predictive selection.} Credible support sets store enough top posterior supports to reach a target posterior mass. They are useful atom summaries, but they still store individual supports rather than regions. Lasso, elastic net, and group lasso provide predictive sparse models. The group-lasso row uses the same supplied grouping used by the synthetic design, which is the favorable case for that baseline. We report prediction and selected-variable or selected-group counts, not TV or FKL, because these methods are not posterior distributions over supports.
-\end{enumerate}
-For dilution-prior and DPP-prior BMA, the TV and FKL columns measure how far the changed-prior posterior moves from the unrestricted benchmark posterior. They are target-shift diagnostics, not evidence that these priors are bad Bayesian procedures for their own targets. The dilution rows use a powered determinant correction. The DPP rows use a stronger determinant prior weight. In the large \(p=100\) runs, these changed-prior rows are evaluated over the visited support set from the unrestricted reference run. We therefore treat them as reweighted target-shift diagnostics over that visited set. A production changed-prior benchmark would require a separate sampler for the changed target or importance-weight effective-sample-size diagnostics.
+The benchmark separates dictionaries inside the density-ratio framework from methods that change the target posterior. Pooled-pruned and posterior-cluster kernels are learned support-region dictionaries. Top-\(M\) atoms, credible support sets, and fixed hard regions are limiting or response-independent support-kernel cases. Dilution-prior BMA and DPP-prior BMA are outside the framework because they change prior support weights before fitting BMA \citep{george2010,krishna2009}. Their TV and FKL columns are therefore target-shift diagnostics relative to the unrestricted benchmark, not evidence that those priors are poor for their own Bayesian targets.
 
-Projection predictive selection also does not approximate the support posterior, so the implemented adjacent comparisons use prediction-only sparse methods. For dictionary methods inside the density-ratio framework, TV and FKL are posterior-compression diagnostics for the fixed reference posterior. The prediction columns are the fairer comparison when the question is whether changing the prior improves prediction or support-size behavior rather than whether the fixed unrestricted posterior has been compressed. The benchmark reports TV, FKL, RKL, \(q_0\), storage cost, predictive score, learned-region stability, runtime, and Monte Carlo uncertainty when available.
+Top-\(M\) truncation stores the largest posterior support atoms from ordinary BMA or stochastic model search \citep{hoeting1999,clyde2011}. An atom means one exact support point \(\gamma\). Posterior-cluster kernels cluster support samples under Hamming or group-Hamming distance and then use the density-ratio calculation to evaluate the resulting regions as posterior summaries. This connects to collinearity-aware and block-based posterior summaries \citep{ghosh2015collinearity,papaspiliopoulos2017}, but adds a fixed-target distortion check. Credible support sets store enough top supports to reach a posterior-mass target. Predictive sparse methods are reported only for RMSE and selected model size.
 
-Table~\ref{tab:maincompetitorbenchmark} reports the full exact comparison. It should be read in two passes. First compare the density-ratio rows with the outside Bayesian baselines. Then compare the dictionary families with each other.
-
-\subsection{Identity and atom checks}
-\label{subsec:exactchecks}
-
-Table~\ref{tab:mainsoftkernelidentity} checks the support-kernel identities in an enumerable posterior. This is a bookkeeping test rather than a performance benchmark. We compute TV, forward KL, reverse KL, and \(E_{\pi_0}h_q\) in two ways, once by direct finite sums over supports and once by the density-ratio formulas. The differences are numerical roundoff, confirming that soft kernels use the same algebra as hard regions.
-
-\begin{table}[!htbp]
-\centering
-\input{sim/output/tables/table_soft_kernel_identity.tex}
-\caption{Exact support-kernel identity validation.}
-\label{tab:mainsoftkernelidentity}
-\end{table}
-
-Theorem~\ref{thm:topmseparation} shows why keeping the largest support atoms can be inefficient in group-representative redundancy. Appendix Corollary~\ref{cor:nearuniformtopm} gives the near-uniform extension. Here an atom is one exact support point in the discrete support posterior. The top-\(M\) baseline is strong because it keeps the largest individual supports under the reference posterior. In small examples it can be close in TV. Its weakness is that it stores atoms rather than regions. Table~\ref{tab:maintopmsep} and Figure~\ref{fig:maintopmsep} illustrate the scaling. Atom truncation must store a constant fraction of \(M^\star=m^s\) supports to achieve small TV, while one support region preserves the whole exchangeable group-representative class.
-
-\begin{table}[!htbp]
-\centering
-\input{sim/output/tables/table_topm_atom_separation.tex}
-\caption{Top-\(M\) atom separation under exchangeable group-representative redundancy. The atom count is \(\lceil0.9M^\star\rceil\), the exact threshold for TV at most \(0.10\).}
-\label{tab:maintopmsep}
-\end{table}
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=.74\textwidth]{sim/output/figures/fig_topm_atom_separation.pdf}
-\caption{TV distortion of top-\(M\) atom truncation under exchangeable group-representative redundancy. Region/kernel compression stores the exchangeable class as one region.}
-\label{fig:maintopmsep}
-\end{figure}
-
-\subsection{Exact dictionary benchmark}
+\subsection{Exact redundancy benchmark}
 \label{subsec:currentexactcomparison}
 
-Table~\ref{tab:maincompetitorbenchmark} is the full exact repeated benchmark for the two empirical questions. The reference target is exact unrestricted BMA, so TV, FKL, and RKL are measured without MCMC error. Each row selects the best FKL point for that method within its tuning grid and then averages over two correlations and five replications. The seven regimes cover one-representative redundancy, multi-representative redundancy, weak signals, noisy grouping, misspecified grouping, ordered interval structure, and graph communities. In the one-representative regime, each active redundant group has one signal coordinate. In the multi-representative regime, a group can contain several signal coordinates.
+The exact benchmark uses synthetic problems small enough to enumerate all \(2^p\) supports. It removes MCMC error from the comparison, so the reported TV, FKL, and RKL are exact posterior-compression errors. Table~\ref{tab:maincompetitorbenchmark} averages over two correlations and five replications in seven regimes, including one-representative redundancy, multi-representative redundancy, weak signals, noisy and misspecified grouping, ordered intervals, and graph communities. Each row selects the best FKL point in its tuning grid.
 
-The result supports density-ratio compression as a checking framework. It does not show that one dictionary dominates every metric. Against methods outside the framework, the density-ratio-checked dictionary families give the best or near-best posterior-compression tradeoffs in most regimes. Dilution-prior BMA is strongest in the ordered-interval and weak-signal regimes, but it does so by changing the prior target.
-
-Within the framework, pooled-pruned support kernels give consistently low FKL with \(q_0\) near the minimum fallback weight and moderate descriptor cost across all seven regimes. Posterior-cluster kernels are strong raw-distortion summaries. They can match or improve FKL in some regimes, but their storage includes learned medoids and bandwidths. Their larger \(q_0\) values also mean that the fallback component is doing more work. Top-\(M\) atoms and credible support sets can be TV-competitive in small exact settings, but they store atoms rather than regions. DPP-prior BMA is a useful redundancy-aware Bayesian comparison, but in these exact runs it is generally farther from unrestricted BMA than pooled-pruned support kernels.
+The result supports the density-ratio framework, but it does not say that one dictionary wins every metric. Pooled-pruned support kernels give consistently low FKL with \(q_0\) near the minimum fallback weight and moderate expected descriptor cost. Posterior-cluster kernels are strong raw-distortion summaries, while top-\(M\) atoms and credible support sets can be TV-competitive in small exact settings but store individual supports rather than regions. Dilution-prior BMA is competitive in some regimes, especially ordered intervals and weak signals, but it changes the posterior target.
 
 \begin{table}[!tbp]
 \centering
 \scriptsize
 \input{sim/output/tables/table_support_kernel_competitor_best_fkl.tex}
-\caption{Exact dictionary benchmark. Parentheses give standard errors. Dilution and DPP rows change the prior target, so their TV and FKL values are target-shift diagnostics rather than compression errors.}
+\caption{Exact dictionary benchmark. Parentheses give standard errors. Dilution and DPP rows are target-shift diagnostics because they change the prior target.}
 \label{tab:maincompetitorbenchmark}
-\end{table}
-
-\begin{table}[!htbp]
-\centering
-\scriptsize
-\input{sim/output/tables/table_support_kernel_predictive_baselines.tex}
-\caption{Prediction-only baselines in the exact benchmark. Gaps are relative to reference BMA. These methods do not define compressed support posteriors, so TV and FKL are not applicable.}
-\label{tab:exactpredictivebaselines}
 \end{table}
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=.95\textwidth]{sim/output/figures/fig_support_kernel_competitor_frontier.pdf}
-\caption{Exact fixed-target storage-distortion frontier.}
+\caption{Exact storage-distortion frontier for the fixed unrestricted posterior.}
 \label{fig:maincompetitorfrontier}
 \end{figure}
 
-\smallskip\noindent\textbf{Non-Gaussian check.} Table~\ref{tab:logisticcheck} repeats the compression step for a binary logistic support posterior. The reference posterior is computed by exact support enumeration with a Laplace approximation to the Gaussian-slab logistic marginal likelihood. The logistic experiment checks the support-posterior compression algebra beyond the Gaussian benchmark. It is not a full empirical study of GLM BMA. Its purpose is limited but important. Once a support posterior exists, support kernels, density ratios, TV, FKL, and \(q_0\) are computed in the same way as in the Gaussian experiments.
-
-\begin{table}[!htbp]
-\centering
-\small
-\input{sim/output/tables/table_logistic_support_kernel_check.tex}
-\caption{Small logistic support-posterior algebra check. This is not a full GLM BMA benchmark.}
-\label{tab:logisticcheck}
-\end{table}
-
-\subsection{Large p=100 benchmark}
+\subsection{Large support-space benchmark}
 \label{subsec:largeendtoend}
 
-The exact benchmark isolates the compression problem from posterior-sampling error. The next benchmark keeps the same comparison logic but moves to non-enumerable \(p=100\) support spaces. Each cell generates a synthetic redundant regression problem and runs six-chain MC3 to obtain an empirical unrestricted BMA reference posterior. It records reference-posterior diagnostics before compression is interpreted. It then compares pooled-pruned support kernels with top-\(M\) atoms, credible support sets, cluster kernels, dilution-prior BMA and DPP-prior BMA over the visited support set, and fixed hard-region lists. The full rerun contains \(12\) scenario-correlation cells with three replications each.
+The large benchmark moves to non-enumerable \(p=100\) support spaces. Each cell generates a synthetic redundant regression problem, runs six-chain MC3 to obtain an empirical unrestricted BMA reference posterior, checks the reference sample, and then compresses held-out posterior draws. The full rerun contains \(12\) scenario-correlation cells with three replications each.
 
-Table~\ref{tab:largeendtoenddiag} appears before the method summary because the reference posterior is the object being compressed. Compression metrics should not be read as high-confidence diagnostics when the reference sample itself is unstable. The final rerun uses \(18{,}000\) retained draws per cell. All \(36\) reference fits pass the core diagnostic gate, and one cell has a low-acceptance warning despite stable split-\(\widehat R\), ESS, and group-PIP diagnostics. This makes the large benchmark an end-to-end validation of the reported density-ratio posterior-compression layer, not only a saved-draw check.
+Table~\ref{tab:largeendtoenddiag} appears before the compression table because the reference posterior is the object being compressed. The final rerun uses \(18{,}000\) retained cold-chain draws per cell. All \(36\) reference fits pass the core diagnostic gate, and one cell has a low-acceptance warning despite stable split-\(\widehat R\), ESS, and group-PIP diagnostics. The mean reference runtime was \(21.1\) seconds per cell, with range \(11.7\) to \(33.7\) seconds on the benchmark workstation. These timings quantify this benchmark rather than making a general speed claim.
 
 \begin{table}[!htbp]
 \centering
@@ -871,81 +807,29 @@ Table~\ref{tab:largeendtoenddiag} appears before the method summary because the 
 \label{tab:largeendtoenddiag}
 \end{table}
 
-The reference-posterior computation is the main additional cost before compression. In the full \(p=100\) rerun each reference fit used six MC3 chains, \(20{,}000\) iterations per chain, \(5{,}000\) burn-in iterations, and thinning by \(5\), giving \(18{,}000\) retained cold-chain draws per cell. The mean reference runtime was \(21.1\) seconds per cell, with range \(11.7\) to \(33.7\) seconds on the benchmark workstation. These timings are not meant as a universal speed claim. They quantify the reference-posterior overhead for the reported benchmark and explain why the diagnostic gate is shown before the compression table.
-
-Conditional on these reference samples, Table~\ref{tab:largeendtoendmethods} supports the intended rate-distortion claim. Pooled-pruned support kernels have lower FKL and lower expected descriptor cost than top-\(M\) atoms, dilution-prior BMA, DPP-prior BMA, credible support sets, and fixed hard regions. The Storage column is \(C_{\mathrm{exp}}\). The List column reports active kernels or stored atoms. The large List value for pooled-pruned is a warning that the refitted mixture still uses many small-weight descriptors, even though its expected code is low.
-
-Cluster kernels give the lowest raw TV and FKL in the large run, but they leave much larger fallback weight and require reporting learned medoids, bandwidths, and cluster counts. Thus the large benchmark does not show uniform domination. It supports the broader framework view. Different kernel dictionaries can be checked on the same density-ratio scale. The user can choose the low expected-code pooled-pruned summary or the raw-distortion cluster summary according to the reporting goal.
+Conditional on these reference samples, Table~\ref{tab:largeendtoendmethods} supports the intended rate-distortion claim. Pooled-pruned support kernels have lower FKL and lower expected descriptor cost than top-\(M\) atoms, dilution-prior BMA, DPP-prior BMA, credible support sets, and fixed hard regions. Cluster kernels give the lowest raw TV and FKL, but they leave larger fallback weight and require reporting learned medoids, bandwidths, and cluster counts. Thus the large benchmark supports the framework view rather than a one-size-fits-all default. Different dictionaries can be checked on the same density-ratio scale.
 
 \begin{table}[!htbp]
 \centering
 \scriptsize
 \input{sim/output/tables/table_large_end_to_end_askpc_family_summary.tex}
-\caption{Large \(p=100\) benchmark. Storage is expected descriptor cost, and List is active kernels or stored atoms. Dilution and DPP rows change the prior target, so their TV and FKL values are target-shift diagnostics.}
+\caption{Large \(p=100\) benchmark. Storage is expected descriptor cost, and List is active kernels or stored atoms. Dilution and DPP rows are target-shift diagnostics.}
 \label{tab:largeendtoendmethods}
 \end{table}
 
-\noindent Because low FKL can be obtained by leaving weight on the unrestricted fallback component, Table~\ref{tab:q0screenedfrontier} screens the same tuning grid by \(q_0\). This is not a separate constrained optimization run. It is a direct check of whether a dictionary family still works when large fallback solutions are excluded. Under the strict \(q_0\le0.05\) screen, pooled-pruned support kernels remain the strongest FKL row among the reported dictionary families. As the screen is relaxed, FKL improves and the active list grows. This makes the fallback-storage-distortion tradeoff part of the main evidence rather than a hidden tuning artifact.
-
-\begin{table}[!htbp]
-\centering
-\small
-\input{sim/output/tables/table_q0_screened_frontier.tex}
-\caption{\(q_0\)-screened large \(p=100\) frontier. Rows select the best available tuning-grid fit satisfying the displayed fallback screen. They are not solutions of a separate constrained optimization problem.}
-\label{tab:q0screenedfrontier}
-\end{table}
-
-\begin{table}[!htbp]
-\centering
-\small
-\input{sim/output/tables/table_large_end_to_end_predictive_baselines.tex}
-\caption{Prediction-only baselines in the large \(p=100\) benchmark. These methods do not define compressed support posteriors, so TV and FKL are not applicable.}
-\label{tab:largepredictivebaselines}
-\end{table}
-
-\subsection{Dictionary diagnostics}
-\label{subsec:ablationdiagnostics}
-
-The remaining diagnostics ask how the candidate generator behaves. The full candidate-source table is in Appendix Table~\ref{tab:adaptiveablationdetail}, because it is a medium-mode diagnostic rather than main evidence. Its message is simple. Cluster-only and residual-only sources can give the smallest raw FKL or TV in the easy high-redundancy setting. Pooled-union and \(99\%\) \(q\)-pruned rows diagnose whether the finite candidate pool is rich, but their active-list sizes show that they are not automatically short descriptor lists. The implementation also checks the embedded pruned solution inside the pooled list, so the pooled diagnostic is not allowed to be worse than its pruned subset under the same objective.
-
-Table~\ref{tab:mainadaptiveconv} reports one representative sequential trace. The penalized objective drops as columns are added. Raw distortion and expected code can move in different directions, which is why the main tables report both distortion and storage diagnostics.
-
-\begin{table}[!htbp]
-\centering
-\scriptsize
-\input{sim/output/tables/table_adaptive_kernel_convergence.tex}
-\caption{Sequential column-generation trace for the fixed-target compression objective.}
-\label{tab:mainadaptiveconv}
-\end{table}
-
-\subsection{Applied checks}
+\subsection{Applied spectral check}
 \label{subsec:appliedchecks}
 
-\subsubsection{Saved-draw check}
-\label{subsec:largersaveddraw}
-
-Table~\ref{tab:mainadaptivep100} keeps the older saved-draw \(p=100\) check as a secondary diagnostic. Unlike the end-to-end run in Section~\ref{subsec:largeendtoend}, this table evaluates compression on stored unrestricted BMA posterior draws rather than rerunning the reference sampler and predictive splits. It is therefore useful for checking structured support kernels in a larger support space, but it is not the main large-\(p\) evidence. The pooled-pruned dictionaries reduce TV and forward KL relative to fixed hard-region lists across the displayed scenarios, while nonzero \(q_0\) values indicate partial rather than complete compression.
-
-\begin{table}[!htbp]
-\centering
-\scriptsize
-\input{sim/output/tables/table_adaptive_kernel_full_draws.tex}
-\caption{Saved-draw \(p=100\) fixed-target density-ratio posterior compression.}
-\label{tab:mainadaptivep100}
-\end{table}
-
-\subsubsection{Semi-synthetic Tecator}
-
-The semi-synthetic spectroscopy experiment uses the real Tecator predictor matrix with a known simulated banded signal. This keeps the difficult part of the design, since adjacent wavelength channels are highly correlated. It also gives a known active region for checking interpretability. Table~\ref{tab:mainsemisynth} and Figure~\ref{fig:mainsemisynth} show that structured pooled-pruned support kernels improve TV and forward KL over fixed hard-region lists and top-\(M\) atoms at low expected descriptor cost, with negligible predictive degradation. The learned high-weight kernels also overlap the simulated active band. This is the strongest controlled practical evidence in the paper. The response is simulated and the reduced posterior is easier to validate, so the result should be read as controlled validation rather than as a production benchmark.
+The semi-synthetic spectroscopy experiment uses the real Tecator predictor matrix with a known simulated banded signal. This keeps the hard design feature, since adjacent wavelength channels are highly correlated, while giving a known active region for interpretability. Table~\ref{tab:mainsemisynth} and Figure~\ref{fig:mainsemisynth} show that structured pooled-pruned support kernels improve TV and forward KL over fixed hard-region lists and top-\(M\) atoms at low expected descriptor cost, with negligible predictive degradation. The learned high-weight kernels also overlap the simulated active band. The response is simulated, so the result is controlled practical validation rather than a full real-data claim.
 
 \begin{table}[!htbp]
 \centering
 \input{sim/output/tables/table_adaptive_kernel_semisynthetic_realx.tex}
-\caption{Semi-synthetic real-\(X\) Tecator fixed-target compression with simulated response.}
+\caption{Semi-synthetic real-\(X\) Tecator compression with simulated response.}
 \label{tab:mainsemisynth}
 \end{table}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
 \begin{tabular}{@{}cc@{}}
 \includegraphics[width=.47\textwidth]{sim/output/figures/fig_adaptive_kernel_semisynthetic_realx.pdf} &
@@ -955,36 +839,12 @@ The semi-synthetic spectroscopy experiment uses the real Tecator predictor matri
 \label{fig:mainsemisynth}
 \end{figure}
 
-\subsubsection{Reduced exact real-response spectroscopy}
-\label{subsec:realresponsereduced}
+\subsection{Empirical takeaway}
+\label{subsec:empiricaltakeaway}
 
-The final experiment uses real spectroscopy predictors and real responses. We use Tecator meat spectroscopy with fat response and Gasoline near-infrared spectra with octane response \citep{thodberg1993,liland2026pls}. Both data sets have ordered, highly redundant spectral channels, so they match the support-region story of the paper. To avoid centering the evidence on a weak full-resolution MCMC reference posterior, we construct a reduced ordered-region design by averaging contiguous spectral blocks using only \(X\). We then enumerate the exact BMA posterior on those regions. This is not a claim about full-resolution spectroscopy. It is a real-response, real-design test of density-ratio posterior compression under a reference posterior that is exact by construction.
+The main experiments support three claims. The density-ratio calculation gives a common diagnostic scale for atom lists, hard regions, soft kernels, posterior clusters, and changed-prior comparisons. Region dictionaries are useful under predictor redundancy because they can summarize many nearly equivalent supports without listing each atom. The best dictionary depends on the reporting goal. Posterior-cluster kernels are strong when raw TV or FKL is the target, while pooled-pruned structured kernels are better when the goal is a low expected-code support-region summary with a small fallback weight.
 
-Table~\ref{tab:realresponseexact} reports Tecator fat and Gasoline octane results. The same posterior compression competitors are used as in the exact synthetic benchmark. Lasso, elastic net, and group lasso rows are kept as prediction checks. The real-response dilution row uses the powered determinant correction, and the DPP row uses the determinant prior with unit power. This experiment tests whether the learned region summaries remain useful when both \(X\) and \(y\) come from real data. It also makes the earlier diagnostic lesson operational. Real-data rows should not be central evidence unless the reference posterior is trustworthy. Here the trust comes from exact enumeration after a deterministic spectral reduction, not from an uncertain sampler.
-
-The reduced real-response results are modest in scope, but they are not a stress-test failure. Pooled-pruned support kernels have lower FKL than Top-\(M\) atoms, credible support sets, dilution-prior BMA, DPP-prior BMA, and fixed hard regions on both data sets. Posterior-cluster kernels are again a strong raw-distortion competitor. On Tecator they give lower FKL, but with a much larger fallback weight and a learned-medoid reporting cost. Fixed hard regions can have competitive TV on Gasoline, but most of the mixture remains in the fallback component. These patterns match the synthetic benchmarks. Structured pooled-pruned regions are low expected-code checked summaries, while cluster kernels are useful when raw distortion is the main target.
-
-\begin{table}[H]
-\centering
-\scriptsize
-\input{sim/output/tables/table_real_response_reduced_best_fkl.tex}
-\caption{Reduced exact real-response spectroscopy benchmark. Dilution and DPP rows change the prior target, so their TV and FKL values are target-shift diagnostics. Prediction-only sparse rows do not define compressed support posteriors.}
-\label{tab:realresponseexact}
-\end{table}
-
-Table~\ref{tab:keypairedcomparisons} summarizes paired comparisons for the main current outputs. The mean gap is comparison minus pooled-pruned, so positive FKL means pooled-pruned has lower forward KL, while positive storage means pooled-pruned has lower expected descriptor cost. The tests are not used as a binary decision rule, but they show that the main qualitative comparisons are not driven by one replication.
-
-\begin{table}[H]
-\centering
-\footnotesize
-\input{sim/output/tables/table_key_paired_comparisons.tex}
-\caption{Paired comparison checks for key current outputs.}
-\label{tab:keypairedcomparisons}
-\end{table}
-
-\subsubsection{Reproducibility}
-
-The companion GitHub repository contains the active R implementation, figure and table generators, fixed seeds, tuning grids, and benchmark scripts. Its README gives one-command paths for the exact benchmark, the large \(p=100\) end-to-end benchmark, the logistic check, the \(q_0\)-screened frontier, the reduced real-response spectroscopy benchmark, and PDF compilation. The large benchmark also stores reference-posterior diagnostics before compression is interpreted. The generated CSV files used by the manuscript tables and figures are regenerated from these scripts.
+The companion GitHub repository contains the active implementation, figure and table generators, fixed seeds, tuning grids, benchmark scripts, and PDF compilation instructions.
 
 \section{Discussion}\label{sec:discussion}
 
@@ -996,7 +856,7 @@ The top-\(M\) comparison clarifies why support-region compression is not just po
 
 The theoretical results have two roles. The validation results say what is true once a reference posterior, a candidate pool, mass estimates, and a validation split are available. The assumption table turns these conditions into diagnostic checks. The structural results show concrete cases where the candidate pool can be rich enough. Separated Hamming-ball posterior clusters, group-representative regions, and ordered interval bands all give low-distortion support-kernel coverage under transparent conditions. Together with the atom-truncation lower bound, this explains why regions are the right object under group-representative redundancy. The theory does not solve posterior computation by itself, and it does not prove that every generated candidate pool contains the best low descriptor-cost representation. The contribution is an exact compression object, practical diagnostic gates, concrete redundancy regimes, and a way to reject inadequate summaries.
 
-The empirical evidence follows the same logic. It includes exact enumerable checks, a full exact benchmark, a \(p=100\) end-to-end benchmark with \(36\) passing reference fits, \(q_0\)-screened frontiers, saved-draw diagnostics, ablations, semi-synthetic real-\(X\) validation, and reduced real-response spectroscopy checks with exact reference posteriors. The experiments answer two questions. First, density-ratio compression gives favorable posterior-compression tradeoffs against outside Bayesian baselines such as dilution-prior BMA and DPP-prior BMA in most reported regimes, while keeping the unrestricted posterior target fixed. Second, the best dictionary family depends on the reporting goal.
+The empirical evidence follows the same logic. The main text gives a full exact benchmark, a \(p=100\) end-to-end benchmark with \(36\) passing reference fits, and a semi-synthetic real-\(X\) spectroscopy check. The appendix keeps algebra checks, atom-scaling diagnostics, prediction-only rows, \(q_0\)-screened frontiers, saved-draw diagnostics, ablations, and reduced real-response spectroscopy checks with exact reference posteriors. The experiments answer two questions. First, density-ratio compression gives favorable posterior-compression tradeoffs against outside Bayesian baselines such as dilution-prior BMA and DPP-prior BMA in most reported regimes, while keeping the unrestricted posterior target fixed. Second, the best dictionary family depends on the reporting goal.
 
 Posterior-cluster kernels are strong raw-distortion summaries and often have lower TV and FKL, but they use learned medoids and can leave a larger fallback weight. Pooled-pruned structured dictionaries are low expected-code, interpretable support-region summaries against Top-\(M\), credible-set, DPP-prior, and fixed-region comparisons. This is an expected-code claim, not a claim that the total active descriptor list is always smallest. The accompanying active-list and stored-atom columns expose code sensitivity. Dilution-prior BMA is competitive in some exact regimes, but it changes the prior target rather than compressing the fixed unrestricted posterior. The reduced real-response checks show practical use under exact references, while larger full-resolution real-response applications would be needed for broader applied claims. Broader computational claims would also require more large-\(p\) cells and independent stability checks, possibly through parallel tempering, SMC, annealed importance sampling, or another externally validated approximation.
 
@@ -1174,14 +1034,136 @@ For any atom truncation that retains a set $A$ of at most $M$ supports and renor
 Thus the atom-storage lower bound is stable to small posterior mass outside the exchangeable group-representative region and to a bounded nonuniformity factor $\exp(r)$ inside the region.
 \end{corollary}
 
-\section{Additional Diagnostic Tables}
+\section{Additional Empirical Diagnostics}
+\label{app:empiricaldiagnostics}
+
+This appendix keeps the empirical checks that are useful for auditability but not central enough for the main empirical argument. They verify the algebra, show atom-truncation scaling, record prediction-only baselines, inspect tuning behavior, and report secondary applied checks.
+
+\subsection{Algebra and atom diagnostics}
+\label{subsec:exactchecks}
+
+Table~\ref{tab:mainsoftkernelidentity} checks the support-kernel identities in an enumerable posterior. It computes TV, forward KL, reverse KL, and \(E_{\pi_0}h_q\) both by direct finite sums and by the density-ratio formulas. The differences are numerical roundoff.
+
+\begin{table}[!htbp]
+\centering
+\input{sim/output/tables/table_soft_kernel_identity.tex}
+\caption{Exact support-kernel identity validation.}
+\label{tab:mainsoftkernelidentity}
+\end{table}
+
+Theorem~\ref{thm:topmseparation} explains why keeping the largest support atoms can be inefficient in group-representative redundancy. Table~\ref{tab:maintopmsep} and Figure~\ref{fig:maintopmsep} show the scaling. Atom truncation must store a constant fraction of \(M^\star=m^s\) supports to achieve small TV, while one support region preserves the whole exchangeable class.
+
+\begin{table}[!htbp]
+\centering
+\input{sim/output/tables/table_topm_atom_separation.tex}
+\caption{Top-\(M\) atom separation under exchangeable group-representative redundancy.}
+\label{tab:maintopmsep}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=.74\textwidth]{sim/output/figures/fig_topm_atom_separation.pdf}
+\caption{TV distortion of top-\(M\) atom truncation under exchangeable group-representative redundancy.}
+\label{fig:maintopmsep}
+\end{figure}
+
+Table~\ref{tab:logisticcheck} repeats the compression calculation for a binary logistic support posterior. It is a small algebra check, not a full GLM BMA benchmark.
+
+\begin{table}[!htbp]
+\centering
+\small
+\input{sim/output/tables/table_logistic_support_kernel_check.tex}
+\caption{Small logistic support-posterior algebra check.}
+\label{tab:logisticcheck}
+\end{table}
+
+\subsection{Prediction and fallback screens}
+
+Tables~\ref{tab:exactpredictivebaselines} and~\ref{tab:largepredictivebaselines} report prediction-only sparse baselines. These rows help interpret predictive performance but do not define compressed support posteriors.
+
+\begin{table}[!htbp]
+\centering
+\scriptsize
+\input{sim/output/tables/table_support_kernel_predictive_baselines.tex}
+\caption{Prediction-only baselines in the exact benchmark.}
+\label{tab:exactpredictivebaselines}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\small
+\input{sim/output/tables/table_large_end_to_end_predictive_baselines.tex}
+\caption{Prediction-only baselines in the large \(p=100\) benchmark.}
+\label{tab:largepredictivebaselines}
+\end{table}
+
+Table~\ref{tab:q0screenedfrontier} screens the large tuning grid by \(q_0\). It checks whether a dictionary family still works when large fallback solutions are excluded.
+
+\begin{table}[!htbp]
+\centering
+\small
+\input{sim/output/tables/table_q0_screened_frontier.tex}
+\caption{\(q_0\)-screened large \(p=100\) frontier.}
+\label{tab:q0screenedfrontier}
+\end{table}
+
+\subsection{Dictionary diagnostics}
+\label{subsec:ablationdiagnostics}
+
+The candidate-source ablation is a medium-mode diagnostic rather than main evidence. It asks which candidate sources help the validation objective, and it checks that the pooled diagnostic is not worse than its embedded pruned subset under the same objective.
 
 \begin{table}[!htbp]
 \centering
 \scriptsize
 \resizebox{\textwidth}{!}{\input{sim/output/tables/table_adaptive_kernel_ablation.tex}}
-\caption{Candidate-source ablation. This medium-mode diagnostic decomposes the objective and shows how pooled, pruned, cluster, residual, interval, graph, fixed-region, and top-\(M\) sources behave under the same validation objective.}
+\caption{Candidate-source ablation.}
 \label{tab:adaptiveablationdetail}
+\end{table}
+
+Table~\ref{tab:mainadaptiveconv} reports one representative sequential trace. The penalized objective drops as columns are added, while raw distortion and expected code can move in different directions.
+
+\begin{table}[!htbp]
+\centering
+\scriptsize
+\input{sim/output/tables/table_adaptive_kernel_convergence.tex}
+\caption{Sequential column-generation trace.}
+\label{tab:mainadaptiveconv}
+\end{table}
+
+\subsection{Saved-draw and real-response checks}
+\label{subsec:largersaveddraw}
+
+Table~\ref{tab:mainadaptivep100} keeps the older saved-draw \(p=100\) check as a secondary diagnostic. It evaluates compression on stored unrestricted BMA posterior draws rather than rerunning the reference sampler and predictive splits.
+
+\begin{table}[!htbp]
+\centering
+\scriptsize
+\input{sim/output/tables/table_adaptive_kernel_full_draws.tex}
+\caption{Saved-draw \(p=100\) compression check.}
+\label{tab:mainadaptivep100}
+\end{table}
+
+\subsection{Reduced exact real-response spectroscopy}
+\label{subsec:realresponsereduced}
+
+The reduced real-response experiment uses Tecator meat spectroscopy with fat response and Gasoline near-infrared spectra with octane response \citep{thodberg1993,liland2026pls}. It averages contiguous spectral blocks using only \(X\), then enumerates the exact BMA posterior on the reduced ordered-region design. This is not full-resolution spectroscopy. It is a real-response check under an exact reference posterior.
+
+\begin{table}[!htbp]
+\centering
+\scriptsize
+\input{sim/output/tables/table_real_response_reduced_best_fkl.tex}
+\caption{Reduced exact real-response spectroscopy benchmark.}
+\label{tab:realresponseexact}
+\end{table}
+
+Table~\ref{tab:keypairedcomparisons} gives paired comparison checks. The mean gap is comparison minus pooled-pruned, so positive FKL means pooled-pruned has lower forward KL, while positive storage means pooled-pruned has lower expected descriptor cost.
+
+\begin{table}[!htbp]
+\centering
+\footnotesize
+\input{sim/output/tables/table_key_paired_comparisons.tex}
+\caption{Paired comparison checks.}
+\label{tab:keypairedcomparisons}
 \end{table}
 
 \section{Proofs}
