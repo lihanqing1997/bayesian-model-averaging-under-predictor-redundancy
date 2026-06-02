@@ -11,6 +11,7 @@
 \usepackage{algpseudocode}
 \usepackage{enumitem}
 \usepackage{lastpage}
+\usepackage{xcolor}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{\usepackage{url}}
 \urlstyle{tt}
 \setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
@@ -80,6 +81,7 @@
 \newcommand{\tr}{\operatorname{tr}}
 \newcommand{\rank}{\operatorname{rank}}
 \newcommand{\supp}{\operatorname{supp}}
+\newcommand{\rev}[1]{\textcolor{red}{#1}}
 
 \jmlrheading{0}{2026}{1-\pageref{LastPage}}{}{}{preprint}{Hanqing Li, Xuewen Lu, and Yuting Chen}
 \ShortHeadings{Bayesian Model Averaging under Predictor Redundancy}{Li, Lu, and Chen}
@@ -117,7 +119,7 @@ Eastern Kentucky University\\ Richmond, KY 40475, USA}
 \maketitle
 
 \begin{abstract}
-Bayesian model averaging can spread posterior mass over many nearly interchangeable model supports. The stable scientific message may be a region of support space rather than one exact support. We study density-ratio posterior compression for a fixed unrestricted support posterior. A support kernel \(w:\Gamma_p\to[0,1]\) is a weight function for a hard or soft support-space region. Normalizing the posterior after multiplying by \(w\) gives a restricted posterior component, and mixtures of these components have an exact density ratio \(h_q\) relative to the unrestricted posterior. This ratio gives total variation, forward and reverse KL, predictive contraction, and fallback diagnostics for many summaries of the same posterior. The construction covers fixed hard regions, structured kernels, posterior-cluster kernels, pooled-pruned hybrids, and top-\(M\) atoms. We prove iid and blocked-MCMC validation bounds, candidate-pool coverage results, structural redundancy examples, and an atom-region separation showing when top-\(M\) atom storage is inefficient. The experiments use Gaussian linear BMA for exact and large-\(p\) benchmarks, report \(q_0\)-screened frontiers to separate region compression from fallback use, and include a small logistic support-posterior algebra check after exact support enumeration. The method is a posterior reporting and validation layer, not a replacement for reference-posterior computation.
+\rev{Bayesian model averaging (BMA)} can spread posterior mass over many nearly interchangeable model supports. The stable scientific message may be a region of support space rather than one exact support. We study density-ratio posterior compression for a fixed unrestricted support posterior. A support kernel \(w:\Gamma_p\to[0,1]\) is a weight function for a hard or soft support-space region. Normalizing the posterior after multiplying by \(w\) gives a restricted posterior component, and mixtures of these components have an exact density ratio \(h_q\) relative to the unrestricted posterior. \rev{This ratio gives total variation (TV), forward and reverse Kullback--Leibler (KL) divergence, predictive contraction, and fallback diagnostics for many summaries of the same posterior.} The construction covers fixed hard regions, structured kernels, posterior-cluster kernels, pooled-pruned hybrids, and top-\(M\) atoms. \rev{We prove independent-sample and blocked Markov chain Monte Carlo (MCMC) validation bounds, candidate-pool coverage results, structural redundancy examples, and an atom-region separation showing when top-\(M\) atom storage is inefficient.} The experiments use Gaussian linear BMA for exact and large-\(p\) benchmarks, report \(q_0\)-screened frontiers to separate region compression from fallback use, and include a small logistic support-posterior algebra check after exact support enumeration. \rev{Together, these components provide a formal reporting and validation layer for a fitted reference posterior rather than a replacement for reference-posterior computation.}
 \end{abstract}
 
 \begin{keywords} Bayesian model averaging, density-ratio posterior compression, support kernels, predictor redundancy, model uncertainty
@@ -125,7 +127,7 @@ Bayesian model averaging can spread posterior mass over many nearly interchangea
 
 \section{Introduction}
 
-Bayesian model averaging (BMA) averages over supports instead of conditioning on a single selected model \citep{hoeting1999,forte2018}. This protects model uncertainty, but predictor redundancy creates a summarization problem that subset averaging alone does not solve. The problem occurs both in classical regimes with moderate \(p\) and in high-dimensional sparse regimes where \(p\) may be comparable to or larger than \(n\). A posterior can concentrate on simple models while spreading its mass over many near-substitute supports. The support posterior is discrete, so one exact support \(\gamma\) with positive posterior mass is an atom of the posterior measure. The scientifically stable object may then be a region of support space, rather than any particular atom.
+Bayesian model averaging (BMA) averages over supports instead of conditioning on a single selected model \citep{hoeting1999,forte2018}. \rev{This protects against the underestimation of model uncertainty, but predictor redundancy creates a summarization problem that subset averaging alone does not solve.} The problem occurs both in classical regimes with \rev{moderate model size \(p\)} and in high-dimensional sparse regimes where \(p\) may be comparable to or \rev{larger than sample size \(n\)}. A posterior can concentrate on simple models while spreading its mass over many near-substitute supports. \rev{Here a support is the binary vector \(\gamma\in\Gamma_p=\{0,1\}^p\) indicating which predictors are active. The support posterior is discrete because \(\Gamma_p\) is a finite set, and one exact support with positive posterior mass is an atom of the posterior measure.} The scientifically stable object may then be a region of support space, rather than any particular atom.
 
 This paper treats that situation as a posterior-compression problem for a fixed unrestricted support posterior. We seek hard or soft support-space regions with low expected descriptor cost that preserve enough of the unrestricted posterior to be reported with quantitative distortion diagnostics. The practical regimes are easiest to see as recurring redundancy patterns rather than as one application. Figure~\ref{fig:practicalregimes} sketches three common cases.
 \begin{itemize}[leftmargin=1.8em,itemsep=1pt,topsep=3pt]
@@ -142,7 +144,7 @@ In all three cases, the goal is not to identify a uniquely correct representativ
 \label{fig:practicalregimes}
 \end{figure}
 
-The closest neighboring ideas are ordinary BMA model lists, posterior clustering or block summaries under collinearity, and dilution or powered-correlation priors. Top-\(M\) BMA lists keep the largest support atoms and are the natural atom-level baseline \citep{hoeting1999,clyde2011}. Posterior clustering and block summaries organize fitted posterior samples, but they usually report clusters without an exact distortion check against the original posterior \citep{ghosh2015collinearity,papaspiliopoulos2017}. Dilution and powered-correlation priors address redundancy before fitting by changing support prior weights, so they change the Bayesian target \citep{george2010,krishna2009}. Projection predictive methods and penalized regression methods mainly compress prediction or coefficients rather than the support posterior \citep{zou2005,yuan2006,simon2013,bair2006,piironen2017,piironen2020}.
+The closest neighboring ideas are ordinary BMA model lists, posterior clustering or block summaries under collinearity, and dilution or powered-correlation priors. Top-\(M\) BMA lists keep the largest support atoms and are the natural atom-level baseline \citep{hoeting1999,clyde2011}. Posterior clustering and block summaries organize fitted posterior samples, but they usually report clusters without an exact distortion check against the original posterior \citep{ghosh2015collinearity,papaspiliopoulos2017}. Dilution and powered-correlation priors address redundancy before fitting by changing support prior weights, so they change the Bayesian target \citep{george2010,krishna2009}. Projection predictive methods and penalized regression methods mainly compress prediction or coefficients rather than the support posterior \citep{zou2005,yuan2006,simon2013,bair2006,piironen2017,piironen2020,pavone2023}.
 
 Our target is different. We keep the unrestricted BMA posterior fixed and ask whether its support-space uncertainty can be reported at a coarser resolution with a quantitative distortion check. Table~\ref{tab:relatedwork} gives a short map of this landscape. Section~\ref{subsec:existingsummaries} turns the closest support-summary ideas into reusable templates.
 
@@ -158,7 +160,7 @@ The workflow starts from a trustworthy reference posterior on the unrestricted s
 
 This scope is part of the method. The paper does not introduce a new prior, a new reference-posterior sampler, or a universal variable-selection rule. It gives a way to compress and check a fixed support posterior after that posterior has been computed. A reported summary is successful only when posterior distortion is small, expected descriptor cost is small, the active descriptor list is shown, and the fallback weight \(q_0\) is not carrying most of the approximation. We therefore report \(q_0\) in the main benchmark tables and give \(q_0\)-screened frontiers in the appendix rather than relying on a single fitted point.
 
-The paper has one organizing contribution, density-ratio posterior compression for a fixed support posterior. The formal work supports this idea in three pieces.
+\rev{The primary contribution of this paper is density-ratio posterior compression for a fixed unrestricted support posterior. This is a fixed-target reporting problem that nearby BMA, grouping, and prediction methods do not directly address. The formal work supports the framework in three parts.}
 \begin{enumerate}[leftmargin=1.8em,itemsep=0.35em,topsep=0.35em,parsep=0pt,partopsep=0pt]
 \item We define support-kernel compression and give exact density-ratio diagnostics. The same identity gives TV, forward KL, reverse KL, predictive contraction, and the fallback weight \(q_0\). Hard regions and retained mass are the simplest special case.
 \item We give validation theory for learned dictionaries. The main guarantees are a held-out density-ratio check, a blocked-MCMC version, and a candidate-pool cover bound. Smaller supporting results explain how the conditions hold for clusters, group regions, and intervals.
@@ -176,7 +178,7 @@ Figure~\ref{fig:compressionillustration} illustrates the target object in a smal
 \end{figure}
 \vspace{8\baselineskip}
 
-Table~\ref{tab:relatedwork} is meant as a scan table rather than a second literature review. The empirical section uses it in two ways. It compares the proposed density-ratio summaries with outside methods that change the target or focus on prediction, and it compares dictionary families inside the framework on the same posterior-distortion scale.
+\rev{Table~\ref{tab:relatedwork} is included to clarify the role of each nearby method before the technical sections begin.} It is meant as a scan table rather than a second literature review. The empirical section uses it in two ways. It compares the proposed density-ratio summaries with outside methods that change the target or focus on prediction, and it compares dictionary families inside the framework on the same posterior-distortion scale.
 
 \begin{table}[!htbp]
 \centering
@@ -258,7 +260,7 @@ method class & object & redundancy handling & output & role here \\
 \label{tab:relatedwork}
 \end{table}
 
-The paper proceeds as follows. Section~\ref{sec:background} defines the reference support posterior and the benchmark BMA instance. Section~\ref{sec:identity} gives the hard-region special case. Section~\ref{sec:mixture} gives the density-ratio identities, validation results, and region-versus-atom theory. Section~\ref{sec:mainalgorithms} describes how dictionaries are built and checked. Section~\ref{sec:leanmainexperiments} gives the empirical evidence. Section~\ref{sec:discussion} discusses scope and limitations, and the appendix contains the proofs.
+The paper proceeds as follows. Section~\ref{sec:background} defines the reference support posterior and the benchmark BMA instance. Section~\ref{sec:identity} gives the hard-region special case. Section~\ref{sec:mixture} gives the density-ratio identities, validation results, and region-versus-atom theory. Section~\ref{sec:mainalgorithms} describes how dictionaries are built and checked. Section~\ref{sec:leanmainexperiments} gives the empirical evidence. Section~\ref{sec:discussion} discusses scope and limitations, and \rev{the appendix contains the proofs and additional supporting theorems.}
 
 \section{Reference support posterior}\label{sec:background}
 
@@ -382,7 +384,7 @@ then the region posterior satisfies
 \end{equation}
 \end{theorem}
 
-The proof is elementary but important. Retained mass is not an auxiliary approximation, but the exact data term in the region posterior. The cancellation in \eqref{eq:fampostalpha} is the main reason for the restriction-aligned prior. Posterior comparison between regions separates into two readable pieces. The term \(\alpha(\F)\) rewards compatibility with the unrestricted analysis, while \(e^{-\lambda c(\F)}\) rewards compression.
+The proof is elementary but important. Retained mass is not an auxiliary approximation, but the exact data term in the region posterior. \rev{The cancellation in \eqref{eq:fampostalpha} means that the factor \(p_0(\F)\) used to normalize the restricted support prior is exactly removed by the factor \(p_0(\F)^{-1}\) in the region-conditional marginal likelihood. What remains is the unrestricted posterior mass \(\alpha(\F)\).} Posterior comparison between regions separates into two readable pieces. The term \(\alpha(\F)\) rewards compatibility with the unrestricted analysis, while \(e^{-\lambda c(\F)}\) rewards compression.
 
 \subsection{Bridge bounds}
 
@@ -425,7 +427,7 @@ The single-region bridge is intentionally strict. It asks whether one support re
 
 When regions are fixed before seeing the response, one can put an ordinary Bayesian hierarchy on them. The posterior-adaptive use in this paper is different. We optimize mixture weights over a finite list of support regions, then check the resulting approximation against the fixed unrestricted posterior. The optimized weights are a reporting device for posterior compression. They are not a new Bayesian posterior over scientific groups.
 
-This section has four roles. First it gives the density-ratio identity. Second it turns the identity into TV, KL, and predictive checks. Third it states how learned dictionaries are validated on held-out posterior draws. Fourth it gives simple structural conditions under which regions beat atom lists. Supporting concentration, MCMC, optimization, and cover details are collected in Appendix~\ref{app:supportingtheory}.
+\rev{This section serves four primary purposes. First, it establishes the density-ratio identity. Second, it applies this identity to TV, KL, and predictive checks. Third, it outlines how learned dictionaries are validated on held-out posterior draws. Fourth, it provides simple structural conditions under which regions outperform atom lists. Supporting details regarding concentration, MCMC, optimization, and covers are collected in Appendix~\ref{app:supportingtheory}.}
 
 \begin{definition}[Hard-region mixture]
 \label{def:familydictionary}
@@ -505,6 +507,7 @@ and posterior-cluster kernels \(w_c(\gamma)=\exp\{-\rho d_H(\gamma,c)\}\) or \(\
 
 There are three ways to build a region list. In the response-independent Bayesian mode, the regions or kernels are fixed before seeing the response, or are constructed from \(X\) alone. A group-representative hierarchy is one hard-region example with an ordinary prior interpretation. In the posterior-adaptive compression mode, kernels are learned from posterior samples of the already fitted unrestricted BMA posterior. This is not a new prior. It is a checked approximation to a fixed posterior when construction, mass estimation, optimization, and final checking are split. In the hybrid mode, response-independent kernels seed the region list and posterior-adaptive residual-cover kernels are added only where held-out distortion says that the seed representation is inadequate. The empirical tables label these modes rather than treating all region lists as Bayesian priors.
 
+\rev{The following display is a definition of the storage-distortion curve for a chosen region list, not a theorem about the optimal list.}
 \begin{definition}[Storage-distortion]
 \label{def:posteriorratedistortion}
 Let \(h_q\) denote either the hard-region density ratio \eqref{eq:hq} or the support-kernel density ratio \eqref{eq:kernelhq}. Let \(\mathrm{Dist}(q)\) be one of
@@ -536,7 +539,7 @@ This is the natural cost for a mixture because component \(m\) is used with weig
 \[
 C_{\mathrm{list}}(\eta)=\sum_{m:q_m>\eta} c_m.
 \]
-The empirical tables therefore report expected code together with active kernels, effective kernels, stored atoms, and candidate-list diagnostics when those quantities are available. Expected code measures a mixture-weighted reporting cost. It is not the same as the total cost of listing every active descriptor. We treat \(q_0\) as part of the storage-distortion reading. A low FKL value with large \(q_0\) is partial compression, because much of the approximation is still the unrestricted posterior. The conventions are fixed before fitting \(q\) and are used for all methods under the same comparison.
+The empirical tables therefore report expected code together with active kernels, effective kernels, stored atoms, and candidate-list diagnostics when those quantities are available. Expected code measures a mixture-weighted reporting cost. It is not the same as the total cost of listing every active descriptor. We treat \(q_0\) as part of the storage-distortion reading. A low FKL value with large \(q_0\) is partial compression, because much of the approximation is still the unrestricted posterior. The conventions are fixed before fitting \(q\) and are used for all methods under the same comparison. \rev{Table~\ref{tab:storagecodes} records the reporting-code conventions used throughout the experiments.}
 
 \begin{table}[!htbp]
 \centering
@@ -574,7 +577,7 @@ The theorem compares \(\widehat q\) to the best region-list mixture in the same 
 
 The iid statement is the cleanest version of the held-out check. Appendix Proposition~\ref{prop:mixingcertification} gives the blocked Markov-chain version, where the effective validation size is the number of approximately independent blocks rather than the raw number of posterior draws. Appendix Corollary~\ref{cor:endtoendcertification} gives the finite-pool specialization with an optimization-gap term. In practice this is why the experiments report ESS, Monte Carlo standard errors, chain-stability diagnostics, KKT residuals, and solver tolerances. If the reference chain does not mix well enough to give stable blocked estimates, the compression result is exploratory even when the algebraic density-ratio calculation is exact.
 
-The validation results separate three checks. The reference posterior must be trustworthy, the generated region list must be rich enough for the posterior geometry, and the optimizer must reach a small measured gap. Table~\ref{tab:assumptiondiagnostics} spells out which assumptions are diagnostic gates and which are structural conditions that can be proved in redundancy regimes.
+\rev{The validation results separate three checks. First, the reference posterior must be trustworthy. Second, the generated region list must be rich enough for the posterior geometry. Third, the optimizer must reach a small measured gap.} Table~\ref{tab:assumptiondiagnostics} spells out which assumptions are diagnostic gates and which are structural conditions that can be proved in redundancy regimes.
 
 \begin{table}[H]
 \centering
@@ -619,11 +622,11 @@ Hence the candidate-class approximation gap is bounded whenever the generated po
 
 This theorem is the formal replacement for an uncontrolled candidate-pool approximation error. The cover condition is structural and is not verified exactly from finite samples. The experiments diagnose it indirectly by comparing pooled candidates, restricted candidate-source pools, restarts, and pruned region lists. A high fallback weight or a dominated pooled-pruned frontier is evidence that the generated pool is not a good cover for the posterior geometry.
 
-The cover condition is abstract, but it has concrete examples. Appendix Theorem~\ref{thm:clustercoverage} treats separated posterior Hamming balls, which is the regime behind the strong cluster-kernel rows in the experiments. Appendix Corollary~\ref{cor:representativecoverage} gives the corresponding statement for group-representative regions, and Appendix Lemma~\ref{lem:intervalcoverage} gives the ordered-interval case.
+The cover condition is abstract, but it has concrete examples. \rev{The appendix gives matching statements for separated posterior Hamming balls, group-representative regions, and ordered intervals. These are the regimes behind the cluster-kernel, group-region, and spectroscopy examples.}
 
 For exact forward KL we optimize over \(\Delta_{\epsilon_0}=\{q\in\Delta_M:q_0\ge\epsilon_0\}\), the simplex with a minimum fallback weight. Because the fallback kernel has \(w_0\equiv1\) and \(\alpha_0=1\), \(h_q^a\ge\epsilon_0\) on this set. Thus \(\ell_{\mathrm{FKL}}(z)=-\log z\) is evaluated on \([\epsilon_0,a^{-1}]\), with \(L=\epsilon_0^{-1}\) and \(B_\ell=\max\{|\log\epsilon_0|,|\log a|\}\). For \(\ell_{\TV}(z)=|z-1|/2\), one may take \(L=1/2\) and \(B_\ell=\max\{1/2,(a^{-1}-1)/2\}\). For the reverse-KL loss we use the bounded-domain form \(\ell_{\mathrm{RKL}}(z)=z\log z\) on \([\epsilon_0,a^{-1}]\), for which a valid Lipschitz constant is \(L=\max\{|\log\epsilon_0|,|\log a|+1\}\) and a valid bound is \(B_\ell=a^{-1}\max\{|\log\epsilon_0|,|\log a|\}\). Numerical lower bounds used only to avoid floating-point underflow are not part of the formal objective.
 
-The remaining technical ingredients are standard enough to keep out of the main flow. Appendix Lemma~\ref{lem:alphaestimation} gives the retained-mass concentration bound, Appendix Corollary~\ref{cor:dictionaryoracle} records the one-good-region implication, and Appendix Theorem~\ref{thm:columngeneration} states the convex active-set optimization facts used by the algorithm.
+The remaining technical ingredients are standard enough to keep out of the main flow. \rev{Appendix~\ref{app:supportingtheory} collects the retained-mass concentration bound, the one-good-region implication, and the convex active-set optimization facts used by the algorithm.}
 
 \begin{theorem}[Region compression]
 \label{thm:regioncompressibility}
@@ -664,9 +667,9 @@ The expected descriptor cost is
 \]
 \end{theorem}
 
-The theorem gives a direct sufficient condition for low descriptor-cost posterior compression. If most posterior mass lies in a few interpretable redundancy regions, then support kernels can report those regions with distortion proportional to the posterior mass left outside them. The fallback weight keeps forward KL finite on the uncovered posterior mass. The candidate-pool cover theorem then says how much extra error is paid when the generated candidate pool only approximates these ideal regions.
+\rev{The formal statement above gives the sufficient condition.} If most posterior mass lies in a few interpretable redundancy regions, then support kernels can report those regions with distortion proportional to the posterior mass left outside them. The fallback weight keeps forward KL finite on the uncovered posterior mass. The candidate-pool cover theorem then says how much extra error is paid when the generated candidate pool only approximates these ideal regions.
 
-Appendix Corollary~\ref{cor:representativecoverage} spells out the group-region case. Appendix Proposition~\ref{prop:duplicatepredictors} explains why exact duplicate predictors lead to exchangeable support atoms, and Appendix Lemma~\ref{lem:intervalcoverage} gives the ordered-interval cover used in the spectroscopy examples.
+\rev{The appendix spells out the group-region, duplicate-predictor, and ordered-interval versions used later in the experiments.}
 
 \begin{theorem}[Atom-storage cost]
 \label{thm:topmseparation}
@@ -813,14 +816,14 @@ Conditional on these reference samples, Table~\ref{tab:largeendtoendmethods} sup
 \centering
 \scriptsize
 \input{sim/output/tables/table_large_end_to_end_askpc_family_summary.tex}
-\caption{Large \(p=100\) benchmark. Storage is expected descriptor cost, and List is active kernels or stored atoms. Dilution and DPP rows are target-shift diagnostics.}
+\caption{Large \(p=100\) benchmark. Storage is expected descriptor cost, and List is active kernels or stored atoms. \rev{Parentheses are standard errors when shown.} Dilution and DPP rows are target-shift diagnostics.}
 \label{tab:largeendtoendmethods}
 \end{table}
 
 \subsection{Applied spectral check}
 \label{subsec:appliedchecks}
 
-The semi-synthetic spectroscopy experiment uses the real Tecator predictor matrix with a known simulated banded signal. This keeps the hard design feature, since adjacent wavelength channels are highly correlated, while giving a known active region for interpretability. Table~\ref{tab:mainsemisynth} and Figure~\ref{fig:mainsemisynth} show that structured pooled-pruned support kernels improve TV and forward KL over fixed hard-region lists and top-\(M\) atoms at low expected descriptor cost, with negligible predictive degradation. The learned high-weight kernels also overlap the simulated active band. The response is simulated, so the result is controlled practical validation rather than a full real-data claim.
+\rev{The semi-synthetic spectroscopy experiment uses the real Tecator predictor matrix and a simulated response generated from a known banded signal. Thus the predictor geometry is real, while the active spectral region is known by construction.} This keeps the hard design feature, since adjacent wavelength channels are highly correlated, while giving a known active region for interpretability. Table~\ref{tab:mainsemisynth} and Figure~\ref{fig:mainsemisynth} show that structured pooled-pruned support kernels improve TV and forward KL over fixed hard-region lists and top-\(M\) atoms at low expected descriptor cost, with negligible predictive degradation. The learned high-weight kernels also overlap the simulated active band. The response is simulated, so the result is controlled practical validation rather than a full real-data claim.
 
 \begin{table}[!htbp]
 \centering
@@ -856,11 +859,11 @@ The top-\(M\) comparison clarifies why support-region compression is not just po
 
 The theoretical results have two roles. The validation results say what is true once a reference posterior, a candidate pool, mass estimates, and a validation split are available. The assumption table turns these conditions into diagnostic checks. The structural results show concrete cases where the candidate pool can be rich enough. Separated Hamming-ball posterior clusters, group-representative regions, and ordered interval bands all give low-distortion support-kernel coverage under transparent conditions. Together with the atom-truncation lower bound, this explains why regions are the right object under group-representative redundancy. The theory does not solve posterior computation by itself, and it does not prove that every generated candidate pool contains the best low descriptor-cost representation. The contribution is an exact compression object, practical diagnostic gates, concrete redundancy regimes, and a way to reject inadequate summaries.
 
-The empirical evidence follows the same logic. The main text gives a full exact benchmark, a \(p=100\) end-to-end benchmark with \(36\) passing reference fits, and a semi-synthetic real-\(X\) spectroscopy check. The appendix keeps algebra checks, atom-scaling diagnostics, prediction-only rows, \(q_0\)-screened frontiers, saved-draw diagnostics, ablations, and reduced real-response spectroscopy checks with exact reference posteriors. The experiments answer two questions. First, density-ratio compression gives favorable posterior-compression tradeoffs against outside Bayesian baselines such as dilution-prior BMA and DPP-prior BMA in most reported regimes, while keeping the unrestricted posterior target fixed. Second, the best dictionary family depends on the reporting goal.
+The empirical evidence follows the same logic. The main text gives a full exact benchmark, a \(p=100\) end-to-end benchmark with \(36\) passing reference fits, and a semi-synthetic real-\(X\) spectroscopy check. The appendix keeps algebra checks, atom-scaling diagnostics, prediction-only rows, \(q_0\)-screened frontiers, saved-draw diagnostics, ablations, and reduced real-response spectroscopy checks with exact reference posteriors. \rev{Here ``exact'' means that all support posterior probabilities are computed by enumeration, while ``end-to-end'' means that the workflow runs reference-posterior sampling, reference diagnostics, compression, and held-out reporting rather than compressing a stored draw file alone.} The experiments answer two questions. First, density-ratio compression gives favorable posterior-compression tradeoffs against outside Bayesian baselines such as dilution-prior BMA and DPP-prior BMA in most reported regimes, while keeping the unrestricted posterior target fixed. Second, the best dictionary family depends on the reporting goal.
 
 Posterior-cluster kernels are strong raw-distortion summaries and often have lower TV and FKL, but they use learned medoids and can leave a larger fallback weight. Pooled-pruned structured dictionaries give favorable expected-code, interpretable support-region summaries against Top-\(M\), credible-set, DPP-prior, and fixed-region comparisons. This is an expected-code claim, not a claim that the total active descriptor list is always smallest. The expected descriptor cost is not the same as the total cost of listing every active descriptor. The accompanying active-list and stored-atom columns expose code sensitivity. Dilution-prior BMA is competitive in some exact regimes, but it changes the prior target rather than compressing the fixed unrestricted posterior. The reduced real-response checks show practical use under exact references, while larger full-resolution real-response applications would be needed for broader applied claims. Broader computational claims would also require more large-\(p\) cells and independent stability checks, possibly through parallel tempering, SMC, annealed importance sampling, or another externally validated approximation.
 
-This is a real limitation. The method is a compression and reporting layer for an unrestricted Bayesian analysis. It is useful after a reliable reference posterior, or a reliable approximation to it, has been obtained. It is not automatically faster than unrestricted BMA, and it should not be marketed as a scalable replacement for reference-posterior computation. A scalable replacement would require a separately validated support-MCMC, SMC, variational, or annealed reference-posterior engine with its own mixing, accuracy, and runtime evidence.
+\rev{The need for a reliable reference posterior is the main practical limitation.} The method is a compression and reporting layer for an unrestricted Bayesian analysis. It is useful after a reliable reference posterior, or a reliable approximation to it, has been obtained. It is not automatically faster than unrestricted BMA, and it should not be marketed as a scalable replacement for reference-posterior computation. A scalable replacement would require a separately validated support-MCMC, SMC, variational, or annealed reference-posterior engine with its own mixing, accuracy, and runtime evidence.
 
 The same distinction applies to model classes. The theory only needs a support-indexed posterior and predictive kernel. Logistic, count, survival, grouped, and other regression BMA analyses can therefore be compressed by the same density-ratio calculation once their reference support posterior is available. Those extensions would need their own reference-posterior diagnostics and empirical benchmarks. The present paper establishes density-ratio posterior compression and tests it in the Gaussian linear instance where the support posterior can be checked most directly.
 
@@ -878,7 +881,7 @@ Xuewen Lu gratefully acknowledges support from a Discovery Grant (RGPIN-2024-039
 \section{Supporting Theory}
 \label{app:supportingtheory}
 
-This appendix collects supporting statements that are used by the main results but are not part of the main narrative.
+\rev{This appendix collects supporting statements that are used by the main results but are not part of the main narrative. The preparatory identities and mass-estimation lemma appear first, followed by MCMC validation, finite-pool optimization, cover results, and atom-separation refinements.}
 
 \begin{proposition}[Hard-region ratio]
 \label{prop:mixtureidentity}
@@ -919,9 +922,25 @@ Consequently, for every \(|\varphi|\le B\),
 The same bound holds after applying any common posterior-predictive Markov kernel. Thus a small density-ratio diagnostic relative to \(\pi_0\) transfers to the target posterior only to the extent that the reference posterior itself has been validated.
 \end{proposition}
 
+\begin{lemma}[Mass estimation]
+\label{lem:alphaestimation}
+Suppose
+\[
+\widehat\alpha_m = N_\alpha^{-1}\sum_{i=1}^{N_\alpha}w_m(\Gamma_i^\alpha)
+\]
+is computed from an independent iid alpha-estimation sample from $\pi_0(\cdot\mid\D)$ for kernels $0\le w_m\le1$. With probability at least $1-\delta$,
+\[
+\max_{0\le m\le M}|\widehat\alpha_m-\alpha_m| \le \sqrt{\frac{\log\{2(M+1)/\delta\}}{2N_\alpha}} =e_\alpha.
+\]
+On this event,
+\[
+\max_m \left| \frac1{\widehat\alpha_m^a} - \frac1{\alpha_m^a} \right| \le \frac{e_\alpha}{a^2}.
+\]
+\end{lemma}
+
 \begin{proposition}[MCMC check]
 \label{prop:mixingcertification}
-Condition on two events. The construction split is fixed, and the alpha-estimation event in Theorem~\ref{thm:empiricalcertification} holds. Let the validation output \(\Gamma_{1:N}\) be a stationary beta-mixing sequence from \(\pi_0(\cdot\mid\D)\) with coefficients \(\beta_{\mathrm{mix}}(k)\). Suppose \(N=2\mu b\). Split the output into \(2\mu\) consecutive blocks of length \(b\), keep the odd blocks, and define the blocked validation objective by replacing \(N^{-1}\sum_i\ell\{\widehat h_q(\Gamma_i)\}\) with the average of the \(\mu\) odd-block means. Let \(\widehat q_b\) minimize this blocked objective over the same feasible set \(\mathcal Q\) as in Theorem~\ref{thm:empiricalcertification}. Under the same boundedness and Lipschitz assumptions, with probability at least \(1-\delta-(\mu-1)\beta_{\mathrm{mix}}(b)\),
+\rev{Condition on the fixed construction split and on the alpha-estimation event in Theorem~\ref{thm:empiricalcertification}.} Let the validation output \(\Gamma_{1:N}\) be a stationary beta-mixing sequence from \(\pi_0(\cdot\mid\D)\) with coefficients \(\beta_{\mathrm{mix}}(k)\). Suppose \(N=2\mu b\). Split the output into \(2\mu\) consecutive blocks of length \(b\), keep the odd blocks, and define the blocked validation objective by replacing \(N^{-1}\sum_i\ell\{\widehat h_q(\Gamma_i)\}\) with the average of the \(\mu\) odd-block means. Let \(\widehat q_b\) minimize this blocked objective over the same feasible set \(\mathcal Q\) as in Theorem~\ref{thm:empiricalcertification}. Under the same boundedness and Lipschitz assumptions, with probability at least \(1-\delta-(\mu-1)\beta_{\mathrm{mix}}(b)\),
 \[
 \mathcal L_{\beta,\tau}^a(\widehat q_b) \le \inf_{q\in\mathcal Q}\mathcal L_{\beta,\tau}^a(q) + 4La^{-1}\sqrt{\frac{2\log\{2(M+1)\}}{\mu}} + 2B_\ell\sqrt{\frac{\log(2/\delta)}{2\mu}} + 2L r_\alpha .
 \]
@@ -929,7 +948,7 @@ Condition on two events. The construction split is fixed, and the alpha-estimati
 
 \begin{corollary}[Finite-pool check]
 \label{cor:endtoendcertification}
-Condition on the construction split and on a finite candidate pool \(\mathcal W=\{w_0,\dots,w_J\}\) containing the fallback kernel \(w_0\equiv1\). Let all retained masses be lower bounded by the floor \(a\), and let validation and alpha-estimation samples be independent of the construction split. Suppose the active-set solver returns \(\widehat q\in\Delta_{\epsilon_0}\) with empirical finite-pool optimization gap
+\rev{Condition on the construction split and on a finite candidate pool \(\mathcal W=\{w_0,\dots,w_J\}\) containing the fallback kernel \(w_0\equiv1\).} Let all retained masses be lower bounded by the floor \(a\), and let validation and alpha-estimation samples be independent of the construction split. Suppose the active-set solver returns \(\widehat q\in\Delta_{\epsilon_0}\) with empirical finite-pool optimization gap
 \[
 \widehat{\mathcal L}_{\beta,\tau}(\widehat q) \le \inf_{q\in\Delta_{\epsilon_0}^{J}} \widehat{\mathcal L}_{\beta,\tau}(q) + \varepsilon_{\mathrm{opt}},
 \]
@@ -955,22 +974,6 @@ Then with probability at least \(1-\sum_{r=1}^K\exp(-N_c p_r)\), the generated p
 \TV(\bar\pi_q^{\,W},\pi_0)\le(1-\zeta)\varepsilon, \qquad \KL(\pi_0\,\|\,\bar\pi_q^{\,W})\le\varepsilon\log(1/\zeta).
 \]
 \end{theorem}
-
-\begin{lemma}[Mass estimation]
-\label{lem:alphaestimation}
-Suppose
-\[
-\widehat\alpha_m = N_\alpha^{-1}\sum_{i=1}^{N_\alpha}w_m(\Gamma_i^\alpha)
-\]
-is computed from an independent iid alpha-estimation sample from $\pi_0(\cdot\mid\D)$ for kernels $0\le w_m\le1$. With probability at least $1-\delta$,
-\[
-\max_{0\le m\le M}|\widehat\alpha_m-\alpha_m| \le \sqrt{\frac{\log\{2(M+1)/\delta\}}{2N_\alpha}} =e_\alpha.
-\]
-On this event,
-\[
-\max_m \left| \frac1{\widehat\alpha_m^a} - \frac1{\alpha_m^a} \right| \le \frac{e_\alpha}{a^2}.
-\]
-\end{lemma}
 
 \begin{corollary}[One good region]
 \label{cor:dictionaryoracle}
@@ -1079,13 +1082,13 @@ Table~\ref{tab:logisticcheck} repeats the compression calculation for a binary l
 
 \subsection{Prediction and fallback screens}
 
-Tables~\ref{tab:exactpredictivebaselines} and~\ref{tab:largepredictivebaselines} report prediction-only sparse baselines. These rows help interpret predictive performance but do not define compressed support posteriors.
+Tables~\ref{tab:exactpredictivebaselines} and~\ref{tab:largepredictivebaselines} report prediction-only sparse baselines. These rows help interpret predictive performance but do not define compressed support posteriors. \rev{The main conclusion is that predictive sparsity alone does not answer the posterior-compression question. Some sparse predictors have competitive RMSE, but they do not provide TV, FKL, RKL, retained mass, or fallback diagnostics for the support posterior.}
 
 \begin{table}[!htbp]
 \centering
 \scriptsize
 \input{sim/output/tables/table_support_kernel_predictive_baselines.tex}
-\caption{Prediction-only baselines in the exact benchmark. These methods do not define support posteriors, so TV and FKL are not applicable.}
+\caption{Prediction-only baselines in the exact benchmark. These methods do not define support posteriors, so TV and FKL are not applicable. \rev{Parentheses are standard errors when shown.}}
 \label{tab:exactpredictivebaselines}
 \end{table}
 
@@ -1093,7 +1096,7 @@ Tables~\ref{tab:exactpredictivebaselines} and~\ref{tab:largepredictivebaselines}
 \centering
 \small
 \input{sim/output/tables/table_large_end_to_end_predictive_baselines.tex}
-\caption{Prediction-only baselines in the large \(p=100\) benchmark. These methods do not define support posteriors, so TV and FKL are not applicable.}
+\caption{Prediction-only baselines in the large \(p=100\) benchmark. These methods do not define support posteriors, so TV and FKL are not applicable. \rev{Parentheses are standard errors when shown.}}
 \label{tab:largepredictivebaselines}
 \end{table}
 
@@ -1146,17 +1149,17 @@ Table~\ref{tab:mainadaptivep100} keeps the older saved-draw \(p=100\) check as a
 \subsection{Reduced exact real-response spectroscopy}
 \label{subsec:realresponsereduced}
 
-The reduced real-response experiment uses Tecator meat spectroscopy with fat response and Gasoline near-infrared spectra with octane response \citep{thodberg1993,liland2026pls}. It averages contiguous spectral blocks using only \(X\), then enumerates the exact BMA posterior on the reduced ordered-region design. This is not full-resolution spectroscopy. It is a real-response check under an exact reference posterior.
+The reduced real-response experiment uses Tecator meat spectroscopy with fat response and Gasoline near-infrared spectra with octane response \citep{thodberg1993,liland2026pls}. It averages contiguous spectral blocks using only \(X\), then enumerates the exact BMA posterior on the reduced ordered-region design. This is not full-resolution spectroscopy. It is a real-response check under an exact reference posterior. \rev{Table~\ref{tab:realresponseexact} reports whether the same density-ratio summaries remain useful when the response is observed rather than simulated.}
 
 \begin{table}[!htbp]
 \centering
 \scriptsize
 \input{sim/output/tables/table_real_response_reduced_best_fkl.tex}
-\caption{Reduced exact real-response spectroscopy benchmark.}
+\caption{Reduced exact real-response spectroscopy benchmark. \rev{The design is reduced before enumeration, so the table is an exact real-response check rather than a full-resolution spectroscopy analysis.}}
 \label{tab:realresponseexact}
 \end{table}
 
-Table~\ref{tab:keypairedcomparisons} gives paired comparison checks. The mean gap is comparison minus pooled-pruned, so positive FKL means pooled-pruned has lower forward KL, while positive storage means pooled-pruned has lower expected descriptor cost.
+Table~\ref{tab:keypairedcomparisons} gives paired comparison checks. The mean gap is comparison minus pooled-pruned, so positive FKL means pooled-pruned has lower forward KL, while positive storage means pooled-pruned has lower expected descriptor cost. \rev{The table is meant to show the direction and uncertainty of the main pairwise claims rather than to introduce a new benchmark.}
 
 \begin{table}[!htbp]
 \centering
@@ -1167,6 +1170,63 @@ Table~\ref{tab:keypairedcomparisons} gives paired comparison checks. The mean ga
 \end{table}
 
 \section{Proofs}
+
+\rev{The proofs are ordered to match the mathematical dependencies. We first prove the retained-mass theorem and the hard-region bridge bounds. We then prove the density-ratio identities, the validation results, the pool-cover theorem, and the structural redundancy results. When a later theorem uses a preparatory lemma or proposition, the proof names that result explicitly.}
+
+\subsection{Proof of Theorem~\ref{thm:alignment}}
+
+\begin{proof} By Bayes' rule and \eqref{eq:restrictedprior},
+\[
+\pi(\gamma \mid \F,\D) \propto m_\gamma(\D)\,p_0(\gamma)\,\ind\{\gamma \in \F\}.
+\]
+Normalizing over $\gamma \in \F$ gives
+\[
+\pi(\gamma \mid \F,\D) = \frac{m_\gamma(\D)p_0(\gamma)\ind\{\gamma \in \F\}} {\sum_{\gamma' \in \F} m_{\gamma'}(\D)p_0(\gamma')}.
+\]
+Since
+\[
+\pi_0(\gamma \mid \D)=\frac{m_\gamma(\D)p_0(\gamma)}{m_0(\D)},
+\]
+the denominator equals
+\[
+m_0(\D)\sum_{\gamma' \in \F}\pi_0(\gamma' \mid \D) = m_0(\D)\,\alpha(\F),
+\]
+which proves \eqref{eq:restrictedpost}. For \eqref{eq:margalpha},
+\[
+M(\F \mid \D) = \frac{1}{p_0(\F)} \sum_{\gamma \in \F} m_\gamma(\D)p_0(\gamma) = m_0(\D)\,\frac{\alpha(\F)}{p_0(\F)}.
+\]
+Substituting \eqref{eq:margalpha} into the collapsed posterior
+\[
+\Pi_{\mathrm{fam}}(\F \mid \D,\lambda) \propto \Pi_{\mathrm{fam}}^0(\F \mid \lambda)\,M(\F \mid \D)
+\]
+yields \eqref{eq:fampostalpha}.
+\end{proof}
+
+\subsection{Proof of Proposition~\ref{prop:bridge}}
+
+\begin{proof} For every $\gamma \in \F$, Theorem~\ref{thm:alignment} implies
+\[
+\pi(\gamma \mid \F,\D) = \frac{\pi_0(\gamma \mid \D)}{\alpha(\F)},
+\]
+and the restricted posterior is zero outside $\F$. Hence
+\[
+\KL\!\left(\pi(\cdot \mid \F,\D)\,\|\,\pi_0(\cdot \mid \D)\right) = \sum_{\gamma \in \F} \frac{\pi_0(\gamma \mid \D)}{\alpha(\F)} \log \frac{1}{\alpha(\F)} = -\log \alpha(\F),
+\]
+which proves \eqref{eq:KLbridge}. For total variation,
+\begin{align*}
+\TV\left(\pi(\cdot\mid\F,\D),\pi_0(\cdot\mid\D)\right)&=\frac{1}{2}\sum_{\gamma\in\F}\left|\frac{\pi_0(\gamma\mid\D)}{\alpha(\F)}-\pi_0(\gamma\mid\D)\right|+\frac{1}{2}\sum_{\gamma\notin\F}\pi_0(\gamma\mid\D)\\
+&=\frac{1}{2}\left(\frac{1-\alpha(\F)}{\alpha(\F)}\right)\alpha(\F)+\frac{1}{2}(1-\alpha(\F))=1-\alpha(\F),
+\end{align*}
+which proves \eqref{eq:TVbridge}.
+
+The predictive density is the pushforward of the support-space posterior through the Markov kernel $\gamma \mapsto p_\gamma(\cdot \mid \tilde x,\D)$. Total variation cannot increase under a Markov kernel, so \eqref{eq:predTVbridge} follows from \eqref{eq:TVbridge}.
+
+For the averaged posterior, convexity of total variation in its first argument gives
+\[
+\TV\!\left(\bar\pi_\lambda(\cdot \mid \D),\pi_0(\cdot \mid \D)\right) \le \sum_{\F \in \Fp} \Pi_{\mathrm{fam}}(\F \mid \D,\lambda)\, \TV\!\left(\pi(\cdot \mid \F,\D),\pi_0(\cdot \mid \D)\right),
+\]
+and \eqref{eq:avgTV} follows from \eqref{eq:TVbridge}. Applying the predictive contraction argument to \eqref{eq:avgTV} proves \eqref{eq:avgpredTV}.
+\end{proof}
 
 \subsection{Proof of Proposition~\ref{prop:mixtureidentity}}
 
@@ -1387,61 +1447,6 @@ Combining the two displays gives
 1-\varepsilon \le \frac{\exp(r)M}{M^\star}+\delta,
 \]
 and rearranging proves the claimed lower bound.
-\end{proof}
-
-\subsection{Proof of Theorem~\ref{thm:alignment}}
-
-\begin{proof} By Bayes' rule and \eqref{eq:restrictedprior},
-\[
-\pi(\gamma \mid \F,\D) \propto m_\gamma(\D)\,p_0(\gamma)\,\ind\{\gamma \in \F\}.
-\]
-Normalizing over $\gamma \in \F$ gives
-\[
-\pi(\gamma \mid \F,\D) = \frac{m_\gamma(\D)p_0(\gamma)\ind\{\gamma \in \F\}} {\sum_{\gamma' \in \F} m_{\gamma'}(\D)p_0(\gamma')}.
-\]
-Since
-\[
-\pi_0(\gamma \mid \D)=\frac{m_\gamma(\D)p_0(\gamma)}{m_0(\D)},
-\]
-the denominator equals
-\[
-m_0(\D)\sum_{\gamma' \in \F}\pi_0(\gamma' \mid \D) = m_0(\D)\,\alpha(\F),
-\]
-which proves \eqref{eq:restrictedpost}. For \eqref{eq:margalpha},
-\[
-M(\F \mid \D) = \frac{1}{p_0(\F)} \sum_{\gamma \in \F} m_\gamma(\D)p_0(\gamma) = m_0(\D)\,\frac{\alpha(\F)}{p_0(\F)}.
-\]
-Substituting \eqref{eq:margalpha} into the collapsed posterior
-\[
-\Pi_{\mathrm{fam}}(\F \mid \D,\lambda) \propto \Pi_{\mathrm{fam}}^0(\F \mid \lambda)\,M(\F \mid \D)
-\]
-yields \eqref{eq:fampostalpha}.
-\end{proof}
-
-\subsection{Proof of Proposition~\ref{prop:bridge}}
-
-\begin{proof} For every $\gamma \in \F$, Theorem~\ref{thm:alignment} implies
-\[
-\pi(\gamma \mid \F,\D) = \frac{\pi_0(\gamma \mid \D)}{\alpha(\F)},
-\]
-and the restricted posterior is zero outside $\F$. Hence
-\[
-\KL\!\left(\pi(\cdot \mid \F,\D)\,\|\,\pi_0(\cdot \mid \D)\right) = \sum_{\gamma \in \F} \frac{\pi_0(\gamma \mid \D)}{\alpha(\F)} \log \frac{1}{\alpha(\F)} = -\log \alpha(\F),
-\]
-which proves \eqref{eq:KLbridge}. For total variation,
-\begin{align*}
-\TV\left(\pi(\cdot\mid\F,\D),\pi_0(\cdot\mid\D)\right)&=\frac{1}{2}\sum_{\gamma\in\F}\left|\frac{\pi_0(\gamma\mid\D)}{\alpha(\F)}-\pi_0(\gamma\mid\D)\right|+\frac{1}{2}\sum_{\gamma\notin\F}\pi_0(\gamma\mid\D)\\
-&=\frac{1}{2}\left(\frac{1-\alpha(\F)}{\alpha(\F)}\right)\alpha(\F)+\frac{1}{2}(1-\alpha(\F))=1-\alpha(\F),
-\end{align*}
-which proves \eqref{eq:TVbridge}.
-
-The predictive density is the pushforward of the support-space posterior through the Markov kernel $\gamma \mapsto p_\gamma(\cdot \mid \tilde x,\D)$. Total variation cannot increase under a Markov kernel, so \eqref{eq:predTVbridge} follows from \eqref{eq:TVbridge}.
-
-For the averaged posterior, convexity of total variation in its first argument gives
-\[
-\TV\!\left(\bar\pi_\lambda(\cdot \mid \D),\pi_0(\cdot \mid \D)\right) \le \sum_{\F \in \Fp} \Pi_{\mathrm{fam}}(\F \mid \D,\lambda)\, \TV\!\left(\pi(\cdot \mid \F,\D),\pi_0(\cdot \mid \D)\right),
-\]
-and \eqref{eq:avgTV} follows from \eqref{eq:TVbridge}. Applying the predictive contraction argument to \eqref{eq:avgTV} proves \eqref{eq:avgpredTV}.
 \end{proof}
 
 \fi
