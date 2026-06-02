@@ -28,7 +28,7 @@
 \setlength{\abovedisplayshortskip}{3pt plus 2pt minus 2pt}
 \setlength{\belowdisplayshortskip}{4pt plus 2pt minus 2pt}
 \allowdisplaybreaks[1]
-\raggedbottom
+\flushbottom
 
 \makeatletter
 \setlength{\@fptop}{0pt}
@@ -169,14 +169,12 @@ This scope is part of the method. The paper does not introduce a new prior, a ne
 
 Figure~\ref{fig:compressionillustration} illustrates the target object in a small enumerable redundant example.
 
-\enlargethispage{2\baselineskip}
-\begin{figure}[H]
+\begin{figure}[!tbp]
 \centering
 \includegraphics[width=\textwidth]{sim/output/model_space_compression_illustration.pdf}
 \caption{Support-kernel compression in an enumerable redundant example. Many atom-level supports are reported as a few support regions, with the density-ratio check measuring the information lost.}
 \label{fig:compressionillustration}
 \end{figure}
-\vspace{8\baselineskip}
 
 \rev{Table~\ref{tab:relatedwork} is included to clarify the role of each nearby method before the technical sections begin.} It is meant as a scan table rather than a second literature review. The empirical section uses it in two ways. It compares the proposed density-ratio summaries with outside methods that change the target or focus on prediction, and it compares dictionary families inside the framework on the same posterior-distortion scale.
 
@@ -579,7 +577,7 @@ The iid statement is the cleanest version of the held-out check. Appendix Propos
 
 \rev{The validation results separate three checks. First, the reference posterior must be trustworthy. Second, the generated region list must be rich enough for the posterior geometry. Third, the optimizer must reach a small measured gap.} Table~\ref{tab:assumptiondiagnostics} spells out which assumptions are diagnostic gates and which are structural conditions that can be proved in redundancy regimes.
 
-\begin{table}[H]
+\begin{table}[!tbp]
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
