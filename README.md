@@ -1,7 +1,12 @@
 # Bayesian Model Averaging under Predictor Redundancy
 
-This repository contains the active manuscript and simulation code for
+This repository contains the simulation and reproducibility code for
 `Bayesian Model Averaging under Predictor Redundancy`.
+
+The manuscript LaTeX source, bibliography, and journal style files are not
+included in this public companion repository. During review, the manuscript is
+maintained separately. This repository is intended to reproduce the empirical
+tables, figures, diagnostics, and code-level checks used by the paper.
 
 The submitted paper is centered on density-ratio support-kernel posterior
 compression for a fixed unrestricted support posterior. The theory is written
@@ -12,18 +17,14 @@ competitor comparisons. Older representative-family, direct sampler,
 retained-mass, and discarded empirical material is kept only as archived backup
 or historical generated output. It is not part of the active paper.
 
-## Active Files
+## Repository Contents
 
-- `BMA.tex` is the active manuscript source.
-- `BMA.pdf` is the compiled target.
-- `BMAbib.bib` is the bibliography.
 - `sim/src/support_kernels.R` contains support-kernel utilities.
 - `sim/src/adaptive_support_kernel_compression.R` contains active-set compression routines.
 - `sim/output/tables/` contains table source files.
 - `sim/output/figures/` contains figure source files.
-
-The active appendices are inside `BMA.tex` after `\appendix`. The switch near
-the top of `BMA.tex` controls whether the appendices are included.
+- `sim/run_*.R` and `sim/make_*.R` scripts regenerate benchmark outputs and
+  assembled table or figure files.
 
 ## How To Read Compression Results
 
@@ -68,23 +69,9 @@ install.packages(
 The commands below assume that `Rscript` is available on the system path. If it
 is not, replace `Rscript` with the full path to the local Rscript executable.
 
-## Build The PDF
-
-From the repository root, run
-
-```bash
-latexmk -pdf -interaction=nonstopmode -halt-on-error BMA.tex
-```
-
-To remove auxiliary files after a successful build, run
-
-```bash
-latexmk -c BMA.tex
-```
-
 ## Main Support-Kernel Runs
 
-Run the fast source-level checks first. They verify exact density-ratio
+Run the fast code-level checks first. They verify exact density-ratio
 identities, the safety constraint, active-set monotonicity, oracle-cover
 diagnostics, blocked Monte Carlo summaries, and the pooled-pruned support-kernel
 helper.
@@ -144,7 +131,7 @@ Rscript sim/run_large_end_to_end_askpc_benchmark.R --mode=summarize --publish
 Rscript sim/make_large_end_to_end_askpc_outputs.R
 ```
 
-The active manuscript tables use the `reliable_full_v2` full MCMC shard outputs
+The reported large-benchmark tables use the `reliable_full_v2` full MCMC shard outputs
 augmented with credible-set, DPP-prior, lasso, elastic-net, and group-lasso
 competitor rows. To rebuild those augmented rows from the saved reference
 objects, run
@@ -159,7 +146,7 @@ Useful full-mode overrides are `--replications=5`, `--scenarios=one_representati
 `--rho=0.7,0.9`, `--n-iter=20000`, `--chains=6`, `--shard-id=1`, and
 `--shard-total=4`. The shard options allow several independent R processes to
 work on different benchmark cells. Add `--run-tag=name` to keep a new rerun
-separate from the manuscript tables while it is being checked. Summarize the
+separate from the released result tables while it is being checked. Summarize the
 tagged checkpoints with `--mode=summarize --run-tag=name`, and add `--publish`
 only after the diagnostic table has been inspected.
 
@@ -198,9 +185,9 @@ Rscript sim/redraw_main_figures.R
 Rscript sim/make_main_tables_figures.R
 ```
 
-## Active Main Sources
+## Generated Table And Figure Outputs
 
-The current paper uses the following table sources.
+The reported analysis uses the following table outputs.
 
 - `sim/output/tables/table_soft_kernel_identity.csv`
 - `sim/output/tables/table_topm_atom_separation_summary.csv`
@@ -236,7 +223,7 @@ The current paper uses the following table sources.
 - `sim/output/tables/table_real_response_reduced_reference_diagnostics.csv`
 - `sim/output/figures/fig_support_kernel_competitor_frontier.pdf`
 
-The current paper uses the following figure sources.
+The reported analysis uses the following figure outputs.
 
 - `sim/output/figures/fig_topm_atom_separation.pdf`
 - `sim/output/figures/fig_adaptive_kernel_rate_distortion.pdf`
@@ -245,7 +232,7 @@ The current paper uses the following figure sources.
 
 ## Theory And Diagnostic Utilities
 
-The source package now includes utilities that correspond to the main
+The code package includes utilities that correspond to the main
 validation results.
 
 - `kernel_pool_cover_diagnostics()` in `sim/src/support_kernels.R` computes the
@@ -275,7 +262,7 @@ validation results.
 
 ## Evidence Labels
 
-The manuscript distinguishes the following evidence types.
+The paper distinguishes the following evidence types.
 
 - Exact enumerable checks verify the density-ratio identities.
 - Exact simulations use synthetic data with small enough \(p\) to enumerate all
@@ -302,5 +289,5 @@ functions of scenario, correlation, replication, method, and run mode.
 
 Older material from previous versions is preserved under `archive/` and in
 historical output folders. Those files are useful for provenance, but they are
-not included in the active manuscript and should not be cited as current
+not included in the reported results and should not be cited as current
 evidence.
