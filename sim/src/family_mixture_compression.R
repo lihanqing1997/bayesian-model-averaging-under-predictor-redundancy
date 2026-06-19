@@ -64,7 +64,7 @@ softmax_normalize <- function(log_q) {
   q / sum(q)
 }
 
-enforce_simplex_safety <- function(q, q0_min = 0, safety_index = 1L) {
+enforce_simplex_safety <- function(q, q0_min = 0, q0_max = 1, safety_index = 1L) {
   q <- as.numeric(q)
   q[!is.finite(q) | q < 0] <- 0
   if (sum(q) <= 0) {
@@ -73,6 +73,7 @@ enforce_simplex_safety <- function(q, q0_min = 0, safety_index = 1L) {
     q <- q / sum(q)
   }
   q0_min <- min(max(as.numeric(q0_min), 0), 1)
+  q0_max <- min(max(as.numeric(q0_max), q0_min), 1)
   safety_index <- as.integer(safety_index)
   if (q0_min > 0 && length(q) > 1 && q[safety_index] < q0_min) {
     rest_idx <- setdiff(seq_along(q), safety_index)
@@ -85,6 +86,17 @@ enforce_simplex_safety <- function(q, q0_min = 0, safety_index = 1L) {
     q[rest_idx] <- rest
     q[safety_index] <- q0_min
   }
+  if (q0_max < 1 && length(q) > 1 && q[safety_index] > q0_max) {
+    rest_idx <- setdiff(seq_along(q), safety_index)
+    rest <- q[rest_idx]
+    if (sum(rest) > 0) {
+      rest <- (1 - q0_max) * rest / sum(rest)
+    } else {
+      rest <- rep((1 - q0_max) / length(rest_idx), length(rest_idx))
+    }
+    q[rest_idx] <- rest
+    q[safety_index] <- q0_max
+  }
   if (q0_min >= 1) {
     q[] <- 0
     q[safety_index] <- 1
@@ -95,17 +107,24 @@ enforce_simplex_safety <- function(q, q0_min = 0, safety_index = 1L) {
 simplex_directional_kkt_residual <- function(gradient,
                                              q,
                                              q0_min = 0,
+                                             q0_max = 1,
                                              safety_index = 1L,
                                              active_tol = 1e-8) {
   gradient <- as.numeric(gradient)
   q <- normalize_weights(q)
   lower <- rep(0, length(q))
   lower[as.integer(safety_index)] <- min(max(as.numeric(q0_min), 0), 1)
+  upper <- rep(1, length(q))
+  upper[as.integer(safety_index)] <- min(max(as.numeric(q0_max), lower[as.integer(safety_index)]), 1)
   donors <- q > lower + active_tol
+  receivers <- q < upper - active_tol
   if (!any(donors)) {
     return(0)
   }
-  max(0, max(gradient[donors], na.rm = TRUE) - min(gradient, na.rm = TRUE))
+  if (!any(receivers)) {
+    return(0)
+  }
+  max(0, max(gradient[donors], na.rm = TRUE) - min(gradient[receivers], na.rm = TRUE))
 }
 
 evaluate_family_mixture_fit <- function(membership,
@@ -118,6 +137,7 @@ evaluate_family_mixture_fit <- function(membership,
                                         distortion = c("fkl", "tv", "rkl"),
                                         h_floor = 1e-10,
                                         q0_min = 0,
+                                        q0_max = 1,
                                         safety_index = 1L,
                                         status = "feasible_evaluation") {
   distortion <- match.arg(distortion)
@@ -126,7 +146,7 @@ evaluate_family_mixture_fit <- function(membership,
   }
   w <- normalize_weights(base_weights)
   costs <- as.numeric(costs)
-  q <- enforce_simplex_safety(q, q0_min = q0_min, safety_index = safety_index)
+  q <- enforce_simplex_safety(q, q0_min = q0_min, q0_max = q0_max, safety_index = safety_index)
   h_floor_eff <- if (distortion == "fkl" && q0_min > 0) min(q0_min, 1) else h_floor
   A <- family_feature_matrix(membership, alpha)
   d <- mixture_distortions(q, membership, alpha, w, h_floor_eff)
@@ -174,6 +194,7 @@ evaluate_family_mixture_fit <- function(membership,
       gradient = grad,
       q = q,
       q0_min = q0_min,
+      q0_max = q0_max,
       safety_index = safety_index
     )
   )
@@ -195,6 +216,7 @@ optimize_family_mixture <- function(membership,
                                     polish_maxit = 200L,
                                     q_init = NULL,
                                     q0_min = 0,
+                                    q0_max = 1,
                                     safety_index = 1L) {
   distortion <- match.arg(distortion)
   if (is.null(base_weights)) {
@@ -209,11 +231,11 @@ optimize_family_mixture <- function(membership,
   } else {
     q <- normalize_weights(q_init)
   }
-  q <- enforce_simplex_safety(q, q0_min = q0_min, safety_index = safety_index)
+  q <- enforce_simplex_safety(q, q0_min = q0_min, q0_max = q0_max, safety_index = safety_index)
   h_floor_eff <- if (distortion == "fkl" && q0_min > 0) min(q0_min, 1) else h_floor
 
   objective_value <- function(q) {
-    q <- enforce_simplex_safety(q, q0_min = q0_min, safety_index = safety_index)
+    q <- enforce_simplex_safety(q, q0_min = q0_min, q0_max = q0_max, safety_index = safety_index)
     d <- mixture_distortions(q, membership, alpha, w, h_floor_eff)
     entropy_term <- if (tau > 0) tau * sum(ifelse(q > 0, q * log(q), 0)) else 0
     dist_value <- switch(
@@ -226,7 +248,7 @@ optimize_family_mixture <- function(membership,
   }
 
   gradient_value <- function(q) {
-    q <- enforce_simplex_safety(q, q0_min = q0_min, safety_index = safety_index)
+    q <- enforce_simplex_safety(q, q0_min = q0_min, q0_max = q0_max, safety_index = safety_index)
     h <- pmax(as.numeric(A %*% q), h_floor_eff)
     grad_dist <- switch(
       distortion,
@@ -246,13 +268,13 @@ optimize_family_mixture <- function(membership,
   for (iter in seq_len(max_iter)) {
     grad <- gradient_value(q)
     q_new <- softmax_normalize(log(pmax(q, h_floor)) - step * (grad - mean(grad)))
-    q_new <- enforce_simplex_safety(q_new, q0_min = q0_min, safety_index = safety_index)
+    q_new <- enforce_simplex_safety(q_new, q0_min = q0_min, q0_max = q0_max, safety_index = safety_index)
     obj_new <- objective_value(q_new)
     local_step <- step
     while (obj_new > obj_old && local_step > 1e-6) {
       local_step <- local_step / 2
       q_new <- softmax_normalize(log(pmax(q, h_floor)) - local_step * (grad - mean(grad)))
-      q_new <- enforce_simplex_safety(q_new, q0_min = q0_min, safety_index = safety_index)
+      q_new <- enforce_simplex_safety(q_new, q0_min = q0_min, q0_max = q0_max, safety_index = safety_index)
       obj_new <- objective_value(q_new)
     }
     if (obj_new > obj_old) {
@@ -311,7 +333,7 @@ optimize_family_mixture <- function(membership,
       error = function(e) e
     )
     if (!inherits(opt, "error")) {
-      q_polished <- enforce_simplex_safety(theta_to_q(opt$par), q0_min = q0_min, safety_index = safety_index)
+      q_polished <- enforce_simplex_safety(theta_to_q(opt$par), q0_min = q0_min, q0_max = q0_max, safety_index = safety_index)
       obj_polished <- objective_value(q_polished)
       polish_convergence <- opt$convergence
       if (is.finite(obj_polished) && obj_polished <= obj_old + tol * (1 + abs(obj_old))) {
@@ -339,6 +361,7 @@ optimize_family_mixture <- function(membership,
     gradient = grad_final,
     q = q,
     q0_min = q0_min,
+    q0_max = q0_max,
     safety_index = safety_index
   )
   status <- if (converged && kkt_residual <= kkt_tol) {
@@ -370,6 +393,7 @@ optimize_family_mixture <- function(membership,
     tau = tau,
     distortion = distortion,
     q0_min = q0_min,
+    q0_max = q0_max,
     safety_index = safety_index,
     kkt_residual = kkt_residual
   )
@@ -383,7 +407,8 @@ rate_distortion_grid <- function(membership,
                                  tau = 1e-3,
                                  distortion = "fkl",
                                  safety_index = 1L,
-                                 q0_min = 0) {
+                                 q0_min = 0,
+                                 q0_max = 1) {
   rows <- list()
   q_start <- NULL
   for (b in beta_grid) {
@@ -397,6 +422,7 @@ rate_distortion_grid <- function(membership,
       distortion = distortion,
       q_init = q_start,
       q0_min = q0_min,
+      q0_max = q0_max,
       safety_index = safety_index
     )
     q_start <- fit$q
@@ -419,6 +445,7 @@ rate_distortion_grid <- function(membership,
       objective_change = fit$objective_change,
       kkt_residual = fit$kkt_residual,
       q0_min = fit$q0_min,
+      q0_max = fit$q0_max,
       stringsAsFactors = FALSE
     )
   }

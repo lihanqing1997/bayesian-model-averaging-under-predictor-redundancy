@@ -90,6 +90,29 @@ soft_hamming_kernel <- function(center_support, rho = 1, cost = NULL, name = NUL
   )
 }
 
+hard_hamming_ball_kernel <- function(center_support, radius = 1L, cost = NULL, name = NULL) {
+  center_support <- as.integer(center_support > 0)
+  radius <- as.integer(radius)
+  if (radius < 0L) {
+    stop("radius must be nonnegative")
+  }
+  if (is.null(cost)) {
+    cost <- log(length(center_support) + 1) + sum(center_support) * log(2) + log(radius + 2)
+  }
+  if (is.null(name)) {
+    active <- which(center_support > 0)
+    name <- paste0("hard_hamming_R", radius, "_", paste(head(active, 12), collapse = "-"))
+  }
+  list(
+    type = "hard_hamming_ball",
+    name = name,
+    cost = cost,
+    key = kernel_key("hard_hamming_ball", list(center = paste(which(center_support > 0), collapse = "-"), R = radius)),
+    params = list(center_support = center_support, radius = radius),
+    origin = "metric_ball"
+  )
+}
+
 soft_group_hamming_kernel <- function(center_groups, group_id, rho = 1, cost = NULL, name = NULL) {
   center_groups <- sort(unique(as.integer(center_groups)))
   K <- max(group_id)
@@ -107,6 +130,31 @@ soft_group_hamming_kernel <- function(center_groups, group_id, rho = 1, cost = N
     cost = cost,
     key = kernel_key("soft_group_hamming", list(center = paste(center_groups, collapse = "-"), rho = rho)),
     params = list(center_groups = center_groups, center_vec = center_vec, rho = rho)
+  )
+}
+
+hard_group_hamming_ball_kernel <- function(center_groups, group_id, radius = 1L, cost = NULL, name = NULL) {
+  center_groups <- sort(unique(as.integer(center_groups)))
+  radius <- as.integer(radius)
+  if (radius < 0L) {
+    stop("radius must be nonnegative")
+  }
+  K <- max(group_id)
+  center_vec <- integer(K)
+  center_vec[center_groups] <- 1L
+  if (is.null(cost)) {
+    cost <- length(center_groups) * log(max(K, 2L)) + log(radius + 2)
+  }
+  if (is.null(name)) {
+    name <- paste0("hard_group_R", radius, "_", if (length(center_groups)) paste(center_groups, collapse = "-") else "empty")
+  }
+  list(
+    type = "hard_group_hamming_ball",
+    name = name,
+    cost = cost,
+    key = kernel_key("hard_group_hamming_ball", list(center = paste(center_groups, collapse = "-"), R = radius)),
+    params = list(center_groups = center_groups, center_vec = center_vec, radius = radius),
+    origin = "metric_ball"
   )
 }
 
@@ -153,7 +201,7 @@ kernel_weights_one <- function(supports, kernel, group_id = NULL) {
   if (identical(type, "safety")) {
     return(rep(1, n))
   }
-  if (type %in% c("hard_active", "soft_capacity", "soft_group_hamming")) {
+  if (type %in% c("hard_active", "soft_capacity", "soft_group_hamming", "hard_group_hamming_ball")) {
     if (is.null(group_id)) {
       stop("group_id required for group-based kernels")
     }
@@ -185,11 +233,23 @@ kernel_weights_one <- function(supports, kernel, group_id = NULL) {
     d <- rowSums(abs(sweep(supports, 2, center, "-")))
     return(exp(-rho * d))
   }
+  if (identical(type, "hard_hamming_ball")) {
+    center <- kernel$params$center_support
+    radius <- kernel$params$radius
+    d <- rowSums(abs(sweep(supports, 2, center, "-")))
+    return(as.numeric(d <= radius))
+  }
   if (identical(type, "soft_group_hamming")) {
     center <- kernel$params$center_vec
     rho <- kernel$params$rho
     d <- rowSums(abs(sweep(active * 1, 2, center, "-")))
     return(exp(-rho * d))
+  }
+  if (identical(type, "hard_group_hamming_ball")) {
+    center <- kernel$params$center_vec
+    radius <- kernel$params$radius
+    d <- rowSums(abs(sweep(active * 1, 2, center, "-")))
+    return(as.numeric(d <= radius))
   }
   if (identical(type, "soft_interval")) {
     interval <- kernel$params$interval
@@ -267,6 +327,68 @@ generate_posterior_cluster_kernels <- function(supports, weights, group_id = NUL
     }
   }
   kernels
+}
+
+select_metric_ball_centers <- function(supports, weights, top_centers = 24L) {
+  weights <- as.numeric(weights)
+  weights[!is.finite(weights) | weights < 0] <- 0
+  if (sum(weights) <= 0) weights <- rep(1, nrow(supports))
+  ord <- order(weights, decreasing = TRUE)
+  top <- head(ord, min(top_centers, length(ord)))
+  spread <- ord[unique(pmax(1L, pmin(length(ord), round(seq(1, length(ord), length.out = min(top_centers, length(ord)))))))]
+  idx <- unique(c(top, spread))
+  centers <- supports[idx, , drop = FALSE]
+  keys <- apply(centers, 1, paste, collapse = "")
+  centers[!duplicated(keys), , drop = FALSE]
+}
+
+generate_metric_ball_kernel_pool <- function(supports,
+                                             weights,
+                                             group_id = NULL,
+                                             top_centers = 24L,
+                                             radii = 0:3,
+                                             rho_grid = c(0.5, 1, 2, 4),
+                                             include_hard = TRUE,
+                                             include_soft = TRUE,
+                                             group_level = TRUE) {
+  supports <- as.matrix(supports)
+  centers <- select_metric_ball_centers(supports, weights, top_centers = top_centers)
+  kernels <- list()
+  for (i in seq_len(nrow(centers))) {
+    center <- centers[i, ]
+    if (include_hard) {
+      for (R in unique(pmax(0L, as.integer(radii)))) {
+        kernels[[length(kernels) + 1L]] <- hard_hamming_ball_kernel(center, radius = R)
+      }
+    }
+    if (include_soft) {
+      for (rho in rho_grid) {
+        k <- soft_hamming_kernel(center, rho = rho)
+        k$name <- paste0("metric_", k$name)
+        k$origin <- "metric_ball"
+        kernels[[length(kernels) + 1L]] <- k
+      }
+    }
+    if (group_level && !is.null(group_id)) {
+      cnt <- support_group_counts(matrix(center, nrow = 1), group_id)
+      center_groups <- which(cnt[1, ] > 0)
+      if (include_hard) {
+        max_R <- max(0L, min(max(group_id), max(as.integer(radii))))
+        for (R in unique(pmax(0L, pmin(max_R, as.integer(radii))))) {
+          kernels[[length(kernels) + 1L]] <- hard_group_hamming_ball_kernel(center_groups, group_id, radius = R)
+        }
+      }
+      if (include_soft) {
+        for (rho in rho_grid) {
+          k <- soft_group_hamming_kernel(center_groups, group_id, rho = rho)
+          k$name <- paste0("metric_", k$name)
+          k$origin <- "metric_ball"
+          kernels[[length(kernels) + 1L]] <- k
+        }
+      }
+    }
+  }
+  dedupe_kernels(kernels)
 }
 
 generate_residual_cover_kernels <- function(supports, residual_weights, group_id = NULL,
@@ -364,6 +486,8 @@ kernel_origin <- function(kernel) {
     soft_capacity = "response_independent_capacity",
     soft_interval = "ordered_interval",
     soft_graph = "graph_community",
+    hard_hamming_ball = "metric_ball",
+    hard_group_hamming_ball = "metric_ball",
     soft_hamming = "posterior_cluster",
     soft_group_hamming = "posterior_cluster",
     "unknown"
@@ -384,8 +508,14 @@ kernel_param_summary <- function(kernel) {
   if (identical(kernel$type, "soft_group_hamming")) {
     return(paste0("groups=", paste(p$center_groups, collapse = "-"), ", rho=", signif(p$rho, 3)))
   }
+  if (identical(kernel$type, "hard_group_hamming_ball")) {
+    return(paste0("groups=", paste(p$center_groups, collapse = "-"), ", R=", p$radius))
+  }
   if (identical(kernel$type, "soft_hamming")) {
     return(paste0("support_size=", sum(p$center_support > 0), ", rho=", signif(p$rho, 3)))
+  }
+  if (identical(kernel$type, "hard_hamming_ball")) {
+    return(paste0("support_size=", sum(p$center_support > 0), ", R=", p$radius))
   }
   if (identical(kernel$type, "soft_interval")) {
     return(paste0("interval=", min(p$interval), "-", max(p$interval), ", cap=", p$capacity, ", rho=", signif(p$rho, 3)))

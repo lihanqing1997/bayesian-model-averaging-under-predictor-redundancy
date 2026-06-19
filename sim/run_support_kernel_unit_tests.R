@@ -19,11 +19,13 @@ base_weights <- normalize_weights(raw_weights)
 dict <- new_support_kernel_dictionary(list(
   safety_kernel(cost = 10),
   hard_active_set_kernel(1L, capacity = 1L, group_id = group_id),
-  soft_hamming_kernel(c(1, 0, 1, 0), rho = 1)
+  soft_hamming_kernel(c(1, 0, 1, 0), rho = 1),
+  hard_hamming_ball_kernel(c(1, 0, 1, 0), radius = 1L),
+  hard_group_hamming_ball_kernel(c(1L), group_id = group_id, radius = 1L)
 ))
 W <- support_kernel_weight_matrix(supports, dict, group_id = group_id)
 alpha <- estimate_kernel_alpha(W, base_weights, alpha_floor = 1e-8)$alpha_truncated
-q <- c(0.15, 0.55, 0.30)
+q <- c(0.15, 0.35, 0.20, 0.15, 0.15)
 
 id <- verify_mixture_identities_exact(base_weights, W, alpha, q)
 expect_lt(max(unlist(id)), 1e-9, "exact density-ratio identities failed")
@@ -46,7 +48,7 @@ fit_one <- optimize_family_mixture(
   q0_min = 0.1, safety_index = 1L, max_iter = 160L, tol = 1e-8
 )
 fit_two <- optimize_family_mixture(
-  W, alpha, kernel_costs(dict), base_weights,
+  W[, 1:3, drop = FALSE], alpha[1:3], kernel_costs(dict)[1:3], base_weights,
   beta = 0.01, tau = 0, distortion = "fkl",
   q_init = c(0.999 * fit_one$q, 0.001),
   q0_min = 0.1, safety_index = 1L, max_iter = 160L, tol = 1e-8
@@ -57,14 +59,19 @@ expect_true(
 )
 
 cover <- kernel_pool_cover_diagnostics(
-  W_oracle = W[, 2:3, drop = FALSE],
+  W_oracle = W[, 2:5, drop = FALSE],
   W_pool = W,
   base_weights = base_weights,
   alpha_floor = 1e-8,
-  costs_oracle = kernel_costs(dict)[2:3],
+  costs_oracle = kernel_costs(dict)[2:5],
   costs_pool = kernel_costs(dict)
 )
 expect_lt(attr(cover, "xi_max"), 1e-9, "oracle-cover diagnostic failed for a pool containing the oracle")
+
+metric_pool <- generate_metric_ball_kernel_pool(supports, base_weights, group_id = group_id, top_centers = 3L, radii = 0:2)
+metric_types <- unique(vapply(metric_pool, function(k) k$type, character(1)))
+expect_true("hard_hamming_ball" %in% metric_types, "hard Hamming balls were not generated")
+expect_true("hard_group_hamming_ball" %in% metric_types, "hard group-Hamming balls were not generated")
 
 phi <- rowSums(supports[, group_id == 1L, drop = FALSE]) > 0
 func <- posterior_functional_error(as.numeric(phi), q, W, alpha, base_weights)

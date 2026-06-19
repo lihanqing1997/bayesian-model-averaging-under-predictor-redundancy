@@ -40,6 +40,7 @@ make_default_kernel_pool <- function(supports, weights, group_id = NULL, X = NUL
                                      include_graph = TRUE,
                                      include_clusters = TRUE,
                                      include_active_sets = TRUE,
+                                     include_metric_balls = TRUE,
                                      mode = "medium") {
   p <- ncol(supports)
   kernels <- list()
@@ -66,6 +67,22 @@ make_default_kernel_pool <- function(supports, weights, group_id = NULL, X = NUL
         group_id = group_id,
         top_medoids = if (mode == "full") 48L else 16L,
         rho_grid = c(0.5, 1, 2),
+        group_level = !is.null(group_id)
+      )
+    )
+  }
+  if (include_metric_balls) {
+    kernels <- c(
+      kernels,
+      generate_metric_ball_kernel_pool(
+        supports = supports,
+        weights = weights,
+        group_id = group_id,
+        top_centers = if (mode == "full") 48L else 16L,
+        radii = 0:3,
+        rho_grid = c(0.5, 1, 2, 4),
+        include_hard = TRUE,
+        include_soft = TRUE,
         group_level = !is.null(group_id)
       )
     )
@@ -99,6 +116,7 @@ learn_adaptive_kernel_dictionary <- function(supports,
                                              max_iter = 12L,
                                              eta = 1e-4,
                                              q0_min = 1e-3,
+                                             q0_max = 1,
                                              prune_threshold = 1e-4,
                                              residual_cover = TRUE,
                                              mode = "medium",
@@ -138,6 +156,7 @@ learn_adaptive_kernel_dictionary <- function(supports,
       tol = 1e-6,
       q_init = q_init,
       q0_min = q0_min,
+      q0_max = q0_max,
       safety_index = 1L
     )
     list(dict = dict, W = W, alpha = alpha, costs = costs, fit = fit)
@@ -264,6 +283,7 @@ learn_adaptive_kernel_dictionary <- function(supports,
     beta = beta,
     tau = tau,
     q0_min = q0_min,
+    q0_max = q0_max,
     prune_threshold = prune_threshold,
     kkt_residual = state$fit$kkt_residual,
     optimizer_status = state$fit$status,
@@ -374,12 +394,14 @@ fit_askpc_pooled_pruned <- function(supports,
                                     tau = 1e-3,
                                     alpha_floor = 1e-8,
                                     q0_min = 1e-3,
+                                    q0_max = 1,
                                     prune_mass = 0.99,
                                     mode = "medium",
                                     include_intervals = TRUE,
                                     include_graph = TRUE,
                                     include_clusters = TRUE,
                                     include_active_sets = TRUE,
+                                    include_metric_balls = TRUE,
                                     include_residual = TRUE,
                                     safety_cost = NULL,
                                     max_iter = NULL,
@@ -406,6 +428,7 @@ fit_askpc_pooled_pruned <- function(supports,
     include_graph = include_graph,
     include_clusters = include_clusters,
     include_active_sets = include_active_sets,
+    include_metric_balls = include_metric_balls,
     mode = mode
   )
   residual_pool <- list()
@@ -460,6 +483,7 @@ fit_askpc_pooled_pruned <- function(supports,
       polish_maxit = if (mode == "full") 120L else 80L,
       q_init = q_init,
       q0_min = q0_min,
+      q0_max = q0_max,
       safety_index = 1L
     )
     list(dict = dict, W = W, alpha = alpha, costs = costs, fit = fit)
@@ -480,6 +504,7 @@ fit_askpc_pooled_pruned <- function(supports,
       tau = tau,
       distortion = "fkl",
       q0_min = q0_min,
+      q0_max = q0_max,
       safety_index = 1L,
       status = status
     )

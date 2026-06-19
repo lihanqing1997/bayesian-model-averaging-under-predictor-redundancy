@@ -1,0 +1,11 @@
+\begin{tabularx}{\textwidth}{@{}lXrrrrrX@{}}
+\toprule
+Region & Center & Radius & Kernel cols. & $q_m$ & $\alpha_m$ & Cost & Meaning \\
+\midrule
+G1 & groups \{2,5,9,13,17\} & 2 & 5 & 0.336 & 1.000 & 4.62 & radius 2 group ball \\
+G2 & groups \{2,5,9,13,17\} & 3 & 5 & 0.319 & 1.000 & 4.62 & radius 3 group ball \\
+G3 & groups \{2,5,9,13,17\} & 1 & 5 & 0.253 & 0.988 & 4.62 & radius 1 group ball \\
+G4 & groups \{2,5,9,13,17\} & 0 & 5 & 0.090 & 0.852 & 4.62 & exact group pattern \\
+fallback & all supports & -- & 1 & 0.001 & 1.000 & 18.42 & fallback residual \\
+\bottomrule
+\end{tabularx}

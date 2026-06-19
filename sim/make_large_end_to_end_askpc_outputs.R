@@ -118,7 +118,7 @@ con <- file(tex_path, open = "w")
 on.exit(close(con), add = TRUE)
 writeLines("\\begin{tabular}{lcccccc}", con)
 writeLines("\\toprule", con)
-writeLines("Method & TV & FKL & $q_0$ & Storage & List & RMSE gap \\\\", con)
+writeLines("Method & TV & FKL & $q_0$ & Reporting cost & Active/list & RMSE gap \\\\", con)
 writeLines("\\midrule", con)
 for (i in seq_len(nrow(agg))) {
   line <- paste(
@@ -176,6 +176,7 @@ diag_summary <- data.frame(
     "Retained draws per run",
     "Split Rhat max",
     "Minimum ESS",
+    "Max group-PIP range",
     "Max group-PIP MCSE",
     "Unique supports"
   ),
@@ -191,6 +192,7 @@ diag_summary <- data.frame(
     paste(sort(unique(diag$retained_draws)), collapse = ", "),
     range_text(diag$split_rhat_max),
     range_text(diag$ess_min),
+    range_text(diag$group_pip_max_range),
     range_text(diag$group_pip_mcse_max),
     range_text(diag$unique_supports, digits = 1)
   ),

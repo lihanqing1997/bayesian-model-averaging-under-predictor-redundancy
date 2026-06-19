@@ -358,6 +358,7 @@ evaluate_kernel_summary <- function(method,
 fit_fixed_hard_benchmark <- function(dat,
                                      reference_fit,
                                      beta = 0.02,
+                                     q0_max = 1,
                                      capacity = 1L,
                                      max_sets = 48L) {
   active_sets <- candidate_active_sets_from_supports(
@@ -379,6 +380,7 @@ fit_fixed_hard_benchmark <- function(dat,
     tau = 1e-3,
     distortion = "fkl",
     q0_min = 1e-3,
+    q0_max = q0_max,
     max_iter = 120L
   )
   list(W = W, alpha = alpha, costs = costs, q = qfit$q, fit = qfit, n_kernels = ncol(W))
@@ -386,6 +388,7 @@ fit_fixed_hard_benchmark <- function(dat,
 
 fit_topm_benchmark <- function(reference_fit,
                                beta = 0.02,
+                               q0_max = 1,
                                top_m = 32L) {
   dict <- make_support_atom_dictionary(reference_fit$supports, reference_fit$posterior, top_m = top_m, include_safety = TRUE)
   W <- family_membership_matrix(reference_fit$supports, dict)
@@ -400,6 +403,7 @@ fit_topm_benchmark <- function(reference_fit,
     tau = 1e-3,
     distortion = "fkl",
     q0_min = 1e-3,
+    q0_max = q0_max,
     max_iter = 120L
   )
   list(W = W, alpha = alpha, costs = costs, q = qfit$q, fit = qfit, n_kernels = ncol(W), stored_atoms = top_m)
@@ -407,6 +411,7 @@ fit_topm_benchmark <- function(reference_fit,
 
 fit_credible_support_benchmark <- function(reference_fit,
                                            beta = 0.02,
+                                           q0_max = 1,
                                            coverage = 0.95) {
   ord <- order(reference_fit$posterior, decreasing = TRUE)
   cum_mass <- cumsum(reference_fit$posterior[ord])
@@ -414,7 +419,7 @@ fit_credible_support_benchmark <- function(reference_fit,
   if (!is.finite(top_m)) {
     top_m <- length(ord)
   }
-  fit <- fit_topm_benchmark(reference_fit, beta = beta, top_m = top_m)
+  fit <- fit_topm_benchmark(reference_fit, beta = beta, q0_max = q0_max, top_m = top_m)
   fit$coverage <- coverage
   fit$stored_atoms <- top_m
   fit
@@ -423,6 +428,7 @@ fit_credible_support_benchmark <- function(reference_fit,
 fit_posterior_clustering_benchmark <- function(dat,
                                                reference_fit,
                                                beta = 0.02,
+                                               q0_max = 1,
                                                n_clusters = 8L,
                                                n_draws = 1500L,
                                                seed = 1L) {
@@ -459,6 +465,7 @@ fit_posterior_clustering_benchmark <- function(dat,
     tau = 1e-3,
     distortion = "fkl",
     q0_min = 1e-3,
+    q0_max = q0_max,
     max_iter = 120L
   )
   list(W = W, alpha = alpha, costs = costs, q = qfit$q, fit = qfit, n_kernels = ncol(W), centers = centers)

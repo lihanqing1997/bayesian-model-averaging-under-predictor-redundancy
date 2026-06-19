@@ -20,9 +20,9 @@ kernel_predictor_cover <- function(kernel, p, group_id) {
     cover[kernel$params$interval] <- 1L
   } else if (identical(kernel$type, "soft_graph")) {
     cover[kernel$params$nodes] <- 1L
-  } else if (identical(kernel$type, "soft_hamming")) {
+  } else if (identical(kernel$type, "soft_hamming") || identical(kernel$type, "hard_hamming_ball")) {
     cover[which(kernel$params$center_support > 0)] <- 1L
-  } else if (identical(kernel$type, "soft_group_hamming")) {
+  } else if (identical(kernel$type, "soft_group_hamming") || identical(kernel$type, "hard_group_hamming_ball")) {
     cover[group_id %in% kernel$params$center_groups] <- 1L
   } else if (identical(kernel$type, "hard_active")) {
     cover[group_id %in% kernel$params$active_groups] <- 1L

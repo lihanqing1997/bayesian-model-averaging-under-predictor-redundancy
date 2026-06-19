@@ -144,7 +144,7 @@ tex_path <- file.path(table_dir, "table_support_kernel_competitor_best_fkl.tex")
 con <- file(tex_path, open = "wt")
 writeLines("\\begin{tabular}{llcccc}", con)
 writeLines("\\toprule", con)
-writeLines("Scenario & Method & TV & FKL & $q_0$ & Code \\\\", con)
+writeLines("Scenario & Method & TV & FKL & $q_0$ & Reporting cost \\\\", con)
 writeLines("\\midrule", con)
 for (sc in unique(compact_main$scenario)) {
   z <- compact_main[compact_main$scenario == sc, , drop = FALSE]
@@ -274,7 +274,7 @@ for (sc in scenarios) {
     NA,
     xlim = xlim,
     ylim = ylim,
-    xlab = "Code or storage proxy",
+    xlab = "Reporting cost",
     ylab = "Forward KL",
     main = gsub("_", " ", sc, fixed = TRUE),
     cex.main = 0.9

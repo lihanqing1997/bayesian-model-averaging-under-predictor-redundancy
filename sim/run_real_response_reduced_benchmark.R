@@ -340,7 +340,7 @@ write_main_tex <- function(best, path) {
   on.exit(close(con), add = TRUE)
   writeLines("\\begin{tabular}{llccccc}", con)
   writeLines("\\toprule", con)
-  writeLines("Dataset & Method & TV & FKL & $q_0$ & Storage & RMSE gap \\\\", con)
+  writeLines("Dataset & Method & TV & FKL & $q_0$ & Reporting cost & RMSE gap \\\\", con)
   writeLines("\\midrule", con)
   for (ds in unique(z$dataset)) {
     d <- z[z$dataset == ds, , drop = FALSE]
